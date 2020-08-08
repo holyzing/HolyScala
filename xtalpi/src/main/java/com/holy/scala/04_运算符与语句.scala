@@ -43,7 +43,7 @@ object Clause {
         // TODO 符号函数
 
         println("--------------------------------------------")
-        for (i <- 1 to 3){  // 首尾包含
+        for (i <- 1 to 3){         // 首尾包含
             for (j <- 1 until 2){  // 不包含 10
                 println(i * j)
             }
