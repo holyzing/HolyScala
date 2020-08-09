@@ -2,6 +2,7 @@ package com.holy.xtalpi;
 
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.Test;
 
 public class HelloJava {
     public static void signature() {
@@ -13,7 +14,12 @@ public class HelloJava {
         System.out.println(011);
         System.out.println(0b11);
     }
-    
+
+    @Test
+    public void test(){
+        System.out.println("Java Test");
+    }
+
     public static void main(String[] args) {
         signature();
     }
