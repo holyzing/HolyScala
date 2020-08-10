@@ -232,7 +232,6 @@ class MyString{
         // TODO 将迭代器指向的所有元素拷贝至缓冲区 Buffer。
     }
 
-
     @Test
     def seqTest(): Unit ={
         println("seq Test")
