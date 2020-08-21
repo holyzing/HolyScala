@@ -9,5 +9,14 @@
 我们只需要提供容器所需的二进制文件、配置文件以及依赖即可。  
 只要容器运行时所需的文件集合都能够具备，那么这个容器就能够运行起来。  
 
+---
+### Docker-compose
+一个 project 当中可包含多个service，每个service中定义了container运行的image，args，dependence,   
+一个 service 当中可包括多个container instance。  
+
+
+
+
+
 
 
