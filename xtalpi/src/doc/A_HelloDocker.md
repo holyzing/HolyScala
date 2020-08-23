@@ -14,6 +14,16 @@
 一个 project 当中可包含多个service，每个service中定义了container运行的image，args，dependence,   
 一个 service 当中可包括多个container instance。  
 
+Infrastructure as a service: 基础设施服务  
+platform as a service      : 平台服务  
+software as a service      : 软件服务
+  
+k8s：  
+    borg 系统         
+    对容器化编排的实现  
+mesos         
+yarn  
+docker-swarm  对容器化实现的支持
 
 
 
