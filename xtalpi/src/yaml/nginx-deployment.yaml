@@ -18,7 +18,7 @@ spec:
     spec:
       containers:
       - name: nginx
-        image: nginx:1.7.9
+        image: nginx:1.7.9    # 替换为 nginx:1.8  可执行滚动更新
         ports:
         - containerPort: 80
           name: http
