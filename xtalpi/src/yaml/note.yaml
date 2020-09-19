@@ -1,0 +1,82 @@
+# pause
+#   容器可以说是 pod 中一组容器的主进程，然后业务容器属于它的 “子进程“共享它的多种命名空间。（存储卷， 网络）
+
+# ReplicationController：
+#   确保容器应用的副本数始终保持在 用户定义的副本数，后续版本使用 ReplicationSet 取代
+
+# ReplicaSet：
+#   较 ReplicationController 而言支持集合式的 selector，集合式的选择器就是多个 label 确定一组容器。
+
+# Deployment：
+#   基于 replicaset 的支持更多pod 管理机制的 控制器。虽然副本控制器可以独立使用，但是不支持 Deployment
+#   的滚动更新等机制，所以建议使用 Deployment 来维护一组容器副本的期望。
+#   滚动更新的过程是创建一个新的 replicaSet，新的创建，旧的删除依次更替。
+#   而且会保留旧的 replicaset（只是停用） 以便后续回滚。
+
+# Horizontal Pod Autoscaling：
+#   基于 relicaSet 对象进行定义，根据各 pod 的资源利用率进行pod扩展，当cpu或者内存（达到80%）的时候 会持续创建pod，
+#   直至达到最大限定数，当利于率低于阈值的时候则回收pod。以求达到资源的水平自动扩展。（CPU 密集型任务）
+
+# statefulset:
+#   是为了解决有状态服务而定义的对象，（docker 容器主要解决的是无状态服务），一般应用场景有如下几例：
+#       稳定的持久化存储，即POD重新调度后能访问到服务相同的持久化数据，（停用之前的数据）基于PVC 实现，
+#       稳定的网络标志，即 Pod 重新调度后其PodName和HostName不变，基于 Headless Service （没有 Cluster IP 的service）实现。
+#       有序部署，有序扩展，在Pod部署或者扩展的时候按照既定的顺序一次进行，并在最后一个pod run起来之前的所有pod都必须保持
+#           runing 或者 ready 状态，基于 init container 实现 （mysql-apache（tomcat）-nginx）
+#       有序收缩，有序删除
+#   虽然是为了 维护具有状态的一组服务，但是 对于集群化的 mysql 的部署还是存在很多问题的？？？？？？？？？？？？？？？？？
+
+# daemonset：
+#   守护进程集
+#   确保全部或者指定Node（打了污点的node）上运行一个Pod的副本。当有Node加入集群时，会自动为其创建一个Pod。当有Pod删除时，
+#   自然会移除那个pod，（废话，所有pod都会被移除），删除 DaemonSet将会删除它创建的所有Pod。
+#   典型用法：
+#       运行集群存储 daemon，例如在每个Node 上运行 glusterd，ceph （分布式文件系统）
+#       在每个Node上运行日志收集Daemon，例如fluentd，logstash，Kibana （数据收集）
+#       在每个Node上运行监控 Daemon，例如 Prometheus Node Exporter + Grafana（监控程序）
+#   PS：一个Node上运行好几个不同的 POD 1：一个pod中多个容器，使用一个DaemonSet 2.多个daemonset来
+
+# Job：
+#   负责批处理任务，即仅执行一次的任务，它保证批处理任务的一个或多个Pod ”成功结束”，而且可以设置任务
+#   正常退出次数，达到那个次数之后才会回收Pod
+#   cron job：管理基于时间的 Job（定时任务，给定时间点和周期执行）
+
+# service：
+#   暴露方式：NodePort 和 ClusterIP （ingress）
+#   一组Pod（具有相同标签的Pod），使用 round ribbon算法 来轮询一组Pod进行请求转发。
+#   适合维护一组特征变化（ip，name）但业务相同的Pod，
+#   业务举例：service（squid（缓存））--> service(一组 apache pod)-->statefulSet(mysql)
+#
+# 负载均衡器：nginx lvs HAProxy
+
+
+
+> Kubernetes 希腊语，舵手或领航员
+> 基于容器的集群管理系统
+> 与 Yarn和Mesos 的区别？
+
+pods (游离的，受控制器管理的)
+services
+ingress
+namespaces
+deployments
+
+--show-labels
+
+
+Replication controller
+Deployment Controller
+
+Deployment
+ReplicaSet
+DaemonSet
+StatefuleSet
+Job
+
+kubectl
+	get
+    cordon
+    describe
+    logs -f
+    exec -it
+	watch kubectl get pods -l app=nginx
