@@ -46,10 +46,18 @@
 #   一组Pod（具有相同标签的Pod），使用 round ribbon算法 来轮询一组Pod进行请求转发。
 #   适合维护一组特征变化（ip，name）但业务相同的Pod，
 #   业务举例：service（squid（缓存））--> service(一组 apache pod)-->statefulSet(mysql)
+#   显然service 具有负载均衡的功能，默认是根据kube-proxy的负载均衡策略，其实现是 基于 ipvs 的调度，
+#   使用 ipvsadm -Ln 可查看负载规则
 
 # ----------------------------------------------------------------------------------------------------------------------
 
 # TODO Docker 的网络模型详细了解 ？？？？？？？？？？？
+
+# nat：      虚拟机与主机连接到同一虚拟交换机，该交换机具有 nat的功能。
+# bridge：   桥接是不需要虚拟交换机的，虚拟机是直接链路到物理网卡上的。
+# host-only：主机与虚拟机一同连接一个虚拟交换机，该交换机不具备 nat转发的功能
+
+# 交换机 路由器 网卡
 
 # 负载均衡器：nginx lvs HAProxy
 
@@ -64,7 +72,7 @@
 #
 #   让集群中的不同节点主机创建的Docker 容器都具有集群唯一的虚拟IP地址。 而且它还能在这些IP 地址之间
 #   建立一个覆盖网络（overlay Network），通过这个覆盖网络，将数据包原封不动的传递到目标容器中。
-#
+#   每个节点都会构建一个 flannel 容器进行该节点覆盖网络的同步并与 etcd 交换信息，
 #   类似的服务工具还有 calico
 
 # OVS （open vswitch）
@@ -105,52 +113,31 @@
 #   源码包构建安装，该种安装方式下的各组件都是以独立进程运行的，一旦出现故障之后，没有直接的方式使其恢复。
 #   好处是可以清晰的知道各组件进程是如何配置启动运行的。
 #   官方安装工具kubeadm，很多自动化安装工具都是 引用kubeadm 进行构建的。
+#   kubeadm 初始化集群master的时候 默认会从 GCE 中拉取镜像
 #
 #   软路由：koolshare
 #       国产的软件，使用软路由的原因是 为了容器可以翻墙，从而进行科学上网，
 #       主要是为了访问 GCE（google 云），因为kubeadm 的镜像是由google 官网发布的。
 
 #   操作系统：centos7 （4.4内核以上，支持绝大多数名称空间）
+#        大型环境中让
 
 #   镜像仓库：harbor
 #       使用 公司的 harbor，但是要自己跟着构建一遍。
-#
 
-#   关闭Selinux：防止将pod安装在虚拟内存中
+#   关闭swap 分区：防止将pod安装在虚拟内存中（使用 ingress 可以排除掉该种隐患，但是生产环境还是建议关闭）
+#   关闭Selinux：
 
+#   overlay2: 支持128层的镜像构建
+
+#   kubectl 只能在master 节点执行 ??????
+#   k8s 的 docker 可以直接pull 指定harbor的 公开的镜像而不用登录
+
+#   docker ps -a -q
 
 # kube-proxy：
 #   解决 pod 和 service 之间的网络通讯方式
 #
-#
-
-
-> Kubernetes 希腊语，舵手或领航员
-> 基于容器的集群管理系统
-> 与 Yarn和Mesos 的区别？
-
-pods (游离的，受控制器管理的)
-services
-ingress
-namespaces
-deployments
-
---show-labels
-
-
-Replication controller
-Deployment Controller
-
-Deployment
-ReplicaSet
-DaemonSet
-StatefuleSet
-Job
-
-kubectl
-	get
-    cordon
-    describe
-    logs -f
-    exec -it
-	watch kubectl get pods -l app=nginx
+# kubelet： 需要和容器接口进行交互，启动容器，而以kubeadm安装的 k8s 组件服务都是
+#           以POD（容器）的形式运行存在的，所以 kubelet 存在的一个意义就是启动 k8s 集群。
+# ----------------------------------------------------------------------------------------------------------------------
