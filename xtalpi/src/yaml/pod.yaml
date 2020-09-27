@@ -1,15 +1,16 @@
-apiVersion: v1          # 指定api版本，此值必须在kubectl api-versions 中
-kind: Pod               # 指定创建资源的角色/类型 Pod Deployment
-metadata:               # 资源的元数据/属性
-  name: web04-pod       # 资源的名字，在同一个namespace中必须唯一
+apiVersion: v1          # 指定api版本，此值必须在kubectl api-versions 中          【必选】
+kind: Pod               # 指定创建资源的角色/类型 Pod Deployment                  【必选】
+metadata:               # 资源的元数据/属性                                      【必选】
+  name: web04-pod       # 资源的名字，在同一个namespace中必须唯一                   【必选】
+  namespace: holy       # 该资源的名称空间，缺省为当前用户的名称空间或default         【必选】
   labels:               # 设定资源的标签，详情请见http://blog.csdn.net/liyingke112/article/details/77482384
     k8s-app: apache
     version: v1
     kubernetes.io/cluster-service: "true"
   annotations:             # 自定义注解列表
     - name: String         # 自定义注解名字
-spec:                      # specification of the resource content 指定该资源的内容
 
+spec:                      # specification of the resource content 指定该资源的内容
   replicas: 1	             # 使用该 “资源” 创建一个应用程序实例
   selector:                # 标签选择器，与上面的标签共同作用
     matchLabels:           # 选择包含标签app:nginx的资源
@@ -24,7 +25,12 @@ spec:                      # specification of the resource content 指定该资�
         image: nginx:1.7.9 # 使用镜像nginx:1.7.9创建container，该container默认80端口可访问
 
 
-  restartPolicy: Always    # 表明该容器一直运行，默认k8s的策略，在此容器退出后，会立即创建一个相同的容器
+  restartPolicy: Always    # 表明该容器一直运行，默认k8s的策略，在此容器退出后，会立即创建一个相同的容器 always， OnFaliure， Nerver
+  imagePullSecrets:
+    name: String
+    secret: String
+  hostNetwork: true        # 默认值 false， 使用宿主机挽留过，不适用 docker 网桥，无法在同一主机启动第二个副本
+
   nodeSelector:            # 节点选择，先给主机打标签kubectl label nodes kube-node1 zone=node1
     zone: node1
   containers:
@@ -36,6 +42,7 @@ spec:                      # specification of the resource content 指定该资�
                            # IfNotPresent，如果本地有就不检查，如果没有就拉取
     command: ['sh']        # 启动容器的运行命令，将覆盖容器中的Entrypoint,对应Dockefile中的ENTRYPOINT
     args: ["$(str)"]       # 启动容器的命令参数，对应Dockerfile中CMD参数
+    workingDir: /home/     # 指定进入容器时的目录
     env:                   # 指定容器中的环境变量
     - name: str            # 变量的名字
       value: "/etc/run.sh" # 变量的值
@@ -50,6 +57,7 @@ spec:                      # specification of the resource content 指定该资�
     - containerPort: 80    # 容器开发对外的端口
       name: httpd          # 名称
       protocol: TCP
+      hostPort: 80         # 与主机映射的端口，默认与containerPort 一致， 设置了该值，则无法启动该容器的相同副本，因为主机会端口冲突
     livenessProbe:         # pod内容器健康检查的设置，详情请见http://blog.csdn.net/liyingke112/article/details/77531584
       httpGet:             # 通过httpget检查健康，返回200-399之间，则认为容器正常
         path: /            # URI地址
