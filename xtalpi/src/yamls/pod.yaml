@@ -57,7 +57,8 @@ spec:                      # specification of the resource content 指定该资�
     - containerPort: 80    # 容器开发对外的端口
       name: httpd          # 名称
       protocol: TCP
-      hostPort: 80         # 与主机映射的端口，默认与containerPort 一致， 设置了该值，则无法启动该容器的相同副本，因为主机会端口冲突
+      hostPort: 80         # 与主机映射的端口，默认与containerPort 一致， 设置了该值，
+                           # 则无法相同主机上启动该容器的相同副本，因为主机会端口冲突
     livenessProbe:         # pod内容器健康检查的设置，详情请见http://blog.csdn.net/liyingke112/article/details/77531584
       httpGet:             # 通过httpget检查健康，返回200-399之间，则认为容器正常
         path: /            # URI地址
