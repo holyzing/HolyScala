@@ -1,0 +1,79 @@
+k8s中的资源类型: 以适用性范围来分类
+    名称空间下的资源: 指定空间名称获取资源
+        工作负载型资源(workload): pod ReplicaSet Deployment StatefulSet DaemonSet, Job, CronJob
+        服务发现及负载均衡型资源（service Discovery LoadBalance）: Service Ingress
+        配置与存储型资源: Volume， CSI
+        特殊类型的存储卷: ConfigMap，Secret，DownloadAPI（把外部环境中的信息输出给容器）
+
+    物理集群下的资源: Namespace，Node，Role， ClusterRole, RoleBinding, ClusterRoleBinding
+    元信息定义下的资源（通过指标来定义操作）: HPA，PodTemplate, LimitRange
+
+yaml:
+    数据类型: 对象 映射 哈希 字典 数据 序列 列表 纯量（scalar）
+    标量: String, Boolean(false, true), Integer, Float, Null(~), Datetime, Date
+
+
+DNS服务：kube-system 名称下的两个pod作为 k8s内置DNS服务， 创建pod的过程中会向该DNS服务写入名称，
+        同时将那两个pod中的DNS服务配置为DNS服务器 解析k8s 集群中的各种名称。
+
+Pod生命周期:
+    kubectl 调用 APIServer下发指令，APIServer 同步 ETCD 信息，kubelet 从 etcd同步信息，准备创建POD
+    1-初始化容器，他们为整个pod 运行应用容器提前创建一些先决条件，它们都是按序完成逐个启动并“运行完成”的，
+      如果中途有个容器启动或者运行失败，则pod会根据restartPollicy进行重启或者直接宕掉。
+
+      初始化容器的作用：
+        （1）包含一些工具，这些工具用来为应用容器构建运行环境，在环境构建好之后，应释放资源。而没必要在应用容器中去
+            运行这些工具，从而造成应用容器的臃肿
+        （2）分权限进行应用容器的资源获取，initC 可以访问 secret 的权限，而且也可以访问应用容器挂载目录，
+            当应用容器需要高权限的资源时，可以由initC写入到应用容器中。
+        （3）阻塞或者延迟并行化运行的一个应用容器的启动，直到满足一组先决条件为止。
+            比如Apache访问mysql中，Apache必须在mysql启动之后才能启动，所以在
+            Apache的InitC中可以完成mysql容器启动的探测，并阻塞Apache的启动。
+            直到mysql启动之后，InitC完成并退出，然后启动Apache
+
+    包括用来在容器间共享网络和存储卷的pause容器，再比如flannel容器，比如 proxy容器，
+
+
+
+    在启动各容器之前可前置 start 事件。
+    2-容器启动过程持续进行 readiness 检测，直到启动完毕，POD可暴露给外部服务。
+    3-运行期间始终进行 liveness 检测，在POD 关闭之前可前置 stop 事件
+
+
+
+
+    1- 请求指令下达到 API接口，并将指令下达给kubelet
+    2- scheduler 将新 pod 分配到某个节点上，pod没有自愈能力，
+       由抽象的 controller 策略来管理， kubelet 实现对该pod的构建和注册等。
+    3- Pod 一旦被调度到某个节点上，那么这个Pod 实例始终就在该节点上，直到 pod 实例被停止或者删除。
+    4- 一个包含多个容器的 Pod 中包含一个用来拉取文件的程序和一个 Web 服务器， 均使用持久卷作为容器间共享的存储。
+       还有一个用于网络栈共享的pause 容器。
+
+    pod 的状态: 包含 规约部分和实际状态部分，这些信息被记录在 pod 对象的 Conditions 中。
+               如果应用需要，也可以注入自定义的就绪性信息。
+    pod: pending running succeeded failed unknown
+    container: waiting running terminated
+
+    探测，纠察，容器初始化
+
+    容器生命周期
+
+
+pods
+ingress
+services
+namespaces
+deployments
+
+kubectl
+    get -n -A --show-labels
+    scale
+    apply
+    create
+    expose
+    cordon
+    explain
+    describe
+    logs -f -c
+    exec -it
+    watch kubectl get pods -l app=nginx
