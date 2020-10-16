@@ -1,0 +1,13 @@
+controller:
+    ReplicaSet|ReplicationController: 后者为最基本的controller，前者较后者多了 selector
+    Deployment: 基于 ReplicaSet 可实现滚动更新，扩容缩容，挂起重启
+    DaemonSet: 守护 Node 的Pod，删除它将会删除其所维护的所有Pod
+               引申：POD被分配到哪个node也可以由用户来定义（标签选择或者污点）
+    Job: 轻量的脚本型的任务，较cron 和 crontab 有一定的纠错能力，如果任务没有以 exitcode=0 退出，则会重新运行。
+    CronJob: 在特定的时间（循环）创建 Job实现
+    StatefulSet: Docker支持有状态服务的策略是增加存储卷，在k8s中提供该控制器保证部署和scale顺序
+                 到目前为止，没有一个更好的方案能解决 mysql 类型的有状态服务（部署不稳定）
+                 但是 mongodb 可以很稳定的部署在k8s集群中。
+                 有序部署和扩展是基于initC实现的，initC不会改变mainC的内部
+                 存储
+    HorizontalPodAutoscaling: 自动扩容缩容（pod个数），资源利用

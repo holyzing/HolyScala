@@ -12,7 +12,6 @@ yaml:
     数据类型: 对象 映射 哈希 字典 数据 序列 列表 纯量（scalar）
     标量: String, Boolean(false, true), Integer, Float, Null(~), Datetime, Date
 
-
 DNS服务：kube-system 名称下的两个pod作为 k8s内置DNS服务， 创建pod的过程中会向该DNS服务写入名称，
         同时将那两个pod中的DNS服务配置为DNS服务器 解析k8s 集群中的各种名称。
 
@@ -63,22 +62,10 @@ Pod生命周期:
       Pod 的相位（phase）是 Pod 在其生命周期中的简单宏观概述。
           该阶段并不是对容器或 Pod 的综合汇总，也不是为了做为综合状态机Pod 相位的数量和含义是严格指定的。
           除了本文档中列举的状态外，不应该再假定 Pod 有其他的 phase 值
-          pending running succeeded failed unknown
-
-
-
-
-
-
-    包括用来在容器间共享网络和存储卷的pause容器，再比如flannel容器，比如 proxy容器，
-
-
-
-    在启动各容器之前可前置 start 事件。
-    2-容器启动过程持续进行 readiness 检测，直到启动完毕，POD可暴露给外部服务。
-    3-运行期间始终进行 liveness 检测，在POD 关闭之前可前置 stop 事件
-
-
+          pod 的状态: 包含 规约部分和实际状态部分，这些信息被记录在 pod 对象的 Conditions 中。
+                     如果应用需要，也可以注入自定义的就绪性信息。
+          container: waiting running terminated
+          pod: pending running succeeded failed unknown
 
 
     1- 请求指令下达到 API接口，并将指令下达给kubelet
@@ -88,14 +75,10 @@ Pod生命周期:
     4- 一个包含多个容器的 Pod 中包含一个用来拉取文件的程序和一个 Web 服务器， 均使用持久卷作为容器间共享的存储。
        还有一个用于网络栈共享的pause 容器。
 
-    pod 的状态: 包含 规约部分和实际状态部分，这些信息被记录在 pod 对象的 Conditions 中。
-               如果应用需要，也可以注入自定义的就绪性信息。
-    pod: pending running succeeded failed unknown
-    container: waiting running terminated
-
-    探测，纠察，容器初始化
-
-    容器生命周期
+-- -------------------------------------------------------------------------------------------------
+1-命令式编程（开发人员）
+2-声明式编程（实际用户）幂等 sql 后有引擎
+-- -------------------------------------------------------------------------------------------------
 
 
 pods
@@ -107,8 +90,8 @@ deployments
 kubectl
     get -n -A --show-labels -o yaml -w
     scale
-    apply
-    create
+    apply                     # 声明式 Deployment
+    create                    # 命令式 ReplicationSet
     delete --all
     expose
     cordon
