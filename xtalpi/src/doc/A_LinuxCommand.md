@@ -13,3 +13,9 @@
 11. ip      : ip 管理
     ip show route : 显示当前主机路由
     ip addr       : 显示网卡信息（物理网卡和虚拟网卡）
+
+12. pkill -fi Postman
+
+13. tail -f -n
+
+14. curl
