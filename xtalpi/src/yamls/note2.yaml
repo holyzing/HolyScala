@@ -44,6 +44,31 @@ Pod生命周期:
             比如Apache访问mysql中，Apache必须在mysql启动之后才能启动，所以在
             Apache的InitC中可以完成mysql容器启动的探测，并阻塞Apache的启动。
             直到mysql启动之后，InitC完成并退出，然后启动Apache
+        （4）但是一般不会用initC做探测，因为initC在探测成功之后就会退出，不能做持续性探测，比如liveness
+
+    探测：
+      探针是由 kubelet对容器执行的定期诊断。要执行诊断，kubelet 调用容器实现的Handler。
+      ExecAction: 在容器内执行指定命令。如果命令退出时返回码为0，则认为诊断成功。
+      TcpSocketAction: 对指定端口上的容器的IP地址执行TCP检查。如果端口打开，则诊断被认为是成功的。
+      HTTPGetAction: 对指定的端口和路径上的容器的 IP地址执行 Http get 请求，通过响应码判断诊断结果
+      成功 失败 未知
+
+      livenessProbe：指示容器是否正在运行。如果存活探测失败，则 kubelet 会杀死容器，并且容器（pod）将
+                     受到其 重启策略 的影响。如果容器不提供存活探针，则默认状态为 Success
+      readinessProbe：指示容器是否准备好服务请求。如果就绪探测失败，端点控制器将从与 Pod 匹配的
+                      所有 Service 的端点中删除该 Pod 的 IP 地址。初始延迟之前的就绪状态默认为 Failure。
+                      如果容器不提供就绪探针，则默认状态为 Success
+
+      Pod 的 status 字段是一个 PodStatus 对象，PodStatus中有一个 phase 字段。
+      Pod 的相位（phase）是 Pod 在其生命周期中的简单宏观概述。
+          该阶段并不是对容器或 Pod 的综合汇总，也不是为了做为综合状态机Pod 相位的数量和含义是严格指定的。
+          除了本文档中列举的状态外，不应该再假定 Pod 有其他的 phase 值
+          pending running succeeded failed unknown
+
+
+
+
+
 
     包括用来在容器间共享网络和存储卷的pause容器，再比如flannel容器，比如 proxy容器，
 
@@ -80,14 +105,26 @@ namespaces
 deployments
 
 kubectl
-    get -n -A --show-labels
+    get -n -A --show-labels -o yaml -w
     scale
     apply
     create
+    delete --all
     expose
     cordon
     explain
     describe
     logs -f -c
-    exec -it
+    exec pod-name -c -it -- /bin/sh
     watch kubectl get pods -l app=nginx
+
+
+
+port            : service 暴露给集群内部节点访问的端口
+hostPort        : 指定POD所在node映射到pod上的端口
+nodePort        : service 暴露服务给外部的方式，同时也指定了暴露的端口
+targetPort      : 容器的端口（最终的流量端口）。targetPort是pod上的端口，从port和nodePort上来的流量，
+                  经过kube-proxy流入到后端pod的targetPort上，最后进入容器。
+containerPort   : 容器内部使用的端口
+
+
