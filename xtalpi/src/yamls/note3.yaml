@@ -10,4 +10,14 @@ controller:
                  但是 mongodb 可以很稳定的部署在k8s集群中。
                  有序部署和扩展是基于initC实现的，initC不会改变mainC的内部
                  存储
-    HorizontalPodAutoscaling: 自动扩容缩容（pod个数），资源利用
+    HorizontalPodAutoscaling: 自动扩容缩容（pod个数），需要其它软件支持
+
+create|apply:
+    deployment的spec中为什么没有 selector？
+    无状态应用的扩容，缩小，非常简单
+    scale 并不会更改其模板，，也就是说deployment 下的rs并没有被新建，所以并不是滚动更新。
+    当去更新镜像的时候则会创建新的rs，实现滚动更新
+    rollover：多个rollout并行时，会立即杀死先前的更新的pod，并开始创建新的pod
+    echo $? kubectl 调用程序的退出码
+    由于 污点 的原因，默认情况下主节点不会参与pod的调度
+    cronJob 本身是创建job，所以cronJob 一般不会获取或者说受理job的成功与否

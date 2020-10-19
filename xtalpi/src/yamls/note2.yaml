@@ -89,9 +89,14 @@ deployments
 
 kubectl
     get -n -A --show-labels -o yaml -w
-    scale
+
+    set iamge deployment/name containerName=imageName:tag
+    scale deployment deploymentName --replicas 10
+    rollout undo --to-reversion |status|history|pause deployment/deploymentName
+
+    label pod --overwrite=true
     apply                     # 声明式 Deployment
-    create                    # 命令式 ReplicationSet
+    create --record           # 命令式 ReplicationSet
     delete --all
     expose
     cordon
