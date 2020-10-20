@@ -89,8 +89,9 @@ deployments
 
 kubectl
     get -n -A --show-labels -o yaml -w
-
     set iamge deployment/name containerName=imageName:tag
+
+    edit
     scale deployment deploymentName --replicas 10
     rollout undo --to-reversion |status|history|pause deployment/deploymentName
 

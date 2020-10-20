@@ -20,11 +20,11 @@ ENV PATH /usr/local/bin:$PATH
 # > At the moment, setting "LANG=C" on a Linux system *fundamentally breaks Python 3*, and that's not OK.
 ENV LANG C.UTF-8
 
-WORKDIR /home/xarc-marvin
+COPY xarc-marvin/ /home/
 
-COPY requirements.txt /home/xarc-marvin/config/
+WORKDIR /home/xarc-marvin/
 
-EXPOSE 6060
+EXPOSE 8080
 
 # VOLUME ["/opt/xarc-marvin/"]
 
@@ -59,6 +59,9 @@ RUN set -ex \
 		wget \
 		xz-utils \
 		zlib1g-dev \
+		git\
+		# 如果 每次有小的更新都需要将代码打包进镜像，比较麻烦，但是对于大版本来说便于 reversion
+		# 1-通过挂载物理机磁盘进行目录共享 2-将内容直接打包进镜像 3-卷宗pcv
 # as of Stretch, "gpg" is no longer included by default
 		$(command -v gpg > /dev/null || echo 'gnupg dirmngr') \
 	\
@@ -189,6 +192,9 @@ RUN set -ex; \
 			\( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
 		\) -exec rm -rf '{}' +; \
 	rm -f get-pip.py \
-	&& /usr/local/python3/bin/pip3 install -r /home/xarc-marvin/config/requirements.txt
+	&& /usr/local/python3/bin/pip3 install -r /home/xarc-marvin/config/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
+	# && python3 /home/xarc-marvin/marvin/manager.py init \
+	# && python3 /home/xarc-marvin/marvin/manager.py migrate \
+	# && python3 /home/xarc-marvin/marvin/manager.py upgrade
 
-CMD ["python3"]
+# CMD ["uwsgi -d -ini /home/xarc-marvin/config/uwsgi.ini"]

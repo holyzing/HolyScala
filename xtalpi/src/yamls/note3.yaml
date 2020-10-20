@@ -21,3 +21,24 @@ create|apply:
     echo $? kubectl 调用程序的退出码
     由于 污点 的原因，默认情况下主节点不会参与pod的调度
     cronJob 本身是创建job，所以cronJob 一般不会获取或者说受理job的成功与否
+
+service:
+    维护一个信息队列，通过RR进行实现负载均衡
+    只提供4层负载均衡能力（IP和端口的转发）没有7层负载均衡（主机名和域名）
+    通过ingress支持7层负载均衡
+    在实际生产中，也会为service外在加一层nginx，实现双层的负载均衡以及高可用
+
+    clusterIp：默认类型，自动分配一个仅集群内部可以访问的虚拟Ip
+    NodePort：clusterIp基础上 在每个node所在的机器上暴露一个端口来实现
+    LoadBalance：在NodePort的基础上，借助cloud provider创建一个外部负载均衡器，并将请求转发到NodePort
+    externalName：引入外部服务到集群，供集群内部访问，就是将外部服务地址通过service做一层代理，基于kubeDns引入
+    service的实现主要是基于kubeproxy实现
+
+    apiserver 通过监控 kubeproxy 实现监听端点和服务发现，kubeproxy进行满足标签选择的pod监控，
+    将这些pod的路由信息写到 iptables，客户端访问service也就意味着访问iptables
+
+    ipvsadm -Ln
+
+
+selector:
+    多标签匹配的规则是 与关系
