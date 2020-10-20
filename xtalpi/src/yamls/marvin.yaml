@@ -1,0 +1,115 @@
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: marvin-data
+#   labels:
+#     app: mysql
+#     version: "5.7"
+
+# spec:
+#   imagePullSecrets:
+#   - name: nitrogen-harbor
+
+#   volumes:
+#   - name: nfs
+#     nfs:
+#       server: 192.168.1.179
+#       path: /data/nfs/marvin/mysql/
+
+#   containers:
+#   - name: mysql
+#     image: harbor.atompai.com/xet/marvin:data
+#     volumeMounts:
+#     - mountPath: /data/mysql/
+#       name: nfs
+#     ports:
+#     - containerPort: 3306
+#       protocol: TCP
+#       name: http
+
+# ---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: marvin-deployment
+    namespace: leilei-hou
+
+spec:
+    replicas: 1
+    selector:
+      matchLabels:
+        app: marvin-pod
+
+    template:
+      metadata:
+        name: marvin-pod
+        labels:
+          app: marvin-pod
+      spec:
+        imagePullSecrets:
+        - name: nitrogen-harbor
+
+        # Volume's name. Must be a DNS_LABEL and unique within the pod
+        volumes:
+        - name: nfs
+          nfs:
+            server: 192.168.1.179
+            path: /data/nfs/marvin/
+
+        containers:
+        - name: mysql
+          image: harbor.atompai.com/xet/marvin:data
+          volumeMounts:
+          - name: nfs
+            subPath: mysql/
+            mountPath: /data/mysql/
+          ports:
+          - containerPort: 3306
+            protocol: TCP
+            name: mysql-port
+
+        - name: backend
+          image: harbor.atompai.com/xet/marvin:v2
+          volumeMounts:
+          - name: nfs
+            subPath: image/
+            mountPath: /data/image/
+          - name: nfs
+            subPath: logs/backend/
+            mountPath: /data/logs/
+          ports:
+          - containerPort: 8080
+            protocol: TCP
+            name: backend-port
+
+        - name: frontend
+          image: nginx:1.7.9
+          volumeMounts:
+          - name: nfs
+            readOnly: true
+            subPath: image/
+            mountPath: /data/image
+          - name: nfs
+            subPath: logs/frontend/
+            mountPath: /data/logs/
+          ports:
+          - containerPort: 80
+            protocol: TCP
+            name: frontend-port
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: marvin-service
+  namespace: leilei-hou
+spec:
+  selector:
+    app: marvin-pod
+  type: NodePort
+  ports:
+  - name: nginx
+    port: 80
+    targetPort: 80
+    nodePort: 38080
