@@ -38,14 +38,15 @@ metadata:
 spec:
     replicas: 1
     selector:
-      matchLabels:
-        app: marvin-pod
+     matchLabels:
+       app: marvin-pod
 
     template:
       metadata:
-        name: marvin-pod
+        name: marvin-pod-template
         labels:
           app: marvin-pod
+
       spec:
         imagePullSecrets:
         - name: nitrogen-harbor
@@ -59,44 +60,53 @@ spec:
 
         containers:
         - name: mysql
+          imagePullPolicy: IfNotPresent
           image: harbor.atompai.com/xet/marvin:data
           volumeMounts:
-          - name: nfs
+          - mountPath: /var/lib/mysql/
             subPath: mysql/
-            mountPath: /data/mysql/
+            name: nfs
           ports:
           - containerPort: 3306
             protocol: TCP
             name: mysql-port
 
         - name: backend
-          image: harbor.atompai.com/xet/marvin:v2
+          imagePullPolicy: IfNotPresent
+          image: harbor.atompai.com/xet/marvin/backend:base
+          command: [ "/bin/bash", "-ce", "tail -f /dev/null" ]
+          workingDir: /home/xarc-marvin/
           volumeMounts:
-          - name: nfs
-            subPath: image/
-            mountPath: /data/image/
-          - name: nfs
+          - mountPath: /data/static/
+            subPath: static/
+            name: nfs
+          - mountPath: /data/logs/
             subPath: logs/backend/
-            mountPath: /data/logs/
+            name: nfs
           ports:
           - containerPort: 8080
             protocol: TCP
             name: backend-port
+          env:
+          - name: WEBAPP_ENV
+            value: dev
 
         - name: frontend
           image: nginx:1.7.9
+          imagePullPolicy: IfNotPresent
+          workingDir: /home/xarc-marvin/
           volumeMounts:
-          - name: nfs
+          - mountPath: /data/static/
+            subPath: static/
             readOnly: true
-            subPath: image/
-            mountPath: /data/image
-          - name: nfs
+            name: nfs
+          - mountPath: /data/logs/
             subPath: logs/frontend/
-            mountPath: /data/logs/
+            name: nfs
           ports:
           - containerPort: 80
-            protocol: TCP
             name: frontend-port
+            protocol: TCP
 
 ---
 apiVersion: v1
@@ -110,6 +120,6 @@ spec:
   type: NodePort
   ports:
   - name: nginx
-    port: 80
+    port: 6060
     targetPort: 80
-    nodePort: 38080
+    nodePort: 30080

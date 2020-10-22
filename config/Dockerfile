@@ -4,11 +4,16 @@
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
 
+
+
 # 基础镜像
 FROM debian:buster-slim
 
 LABEL app.maintainer.name=holyzing app.maintainer.email=leilei.hou@xtalpi.com
 LABEL app.version="0.4" app.host='xarc.wiki' description="marvin-backend"
+
+# ENV http_proxy socks5://127.0.0.1:1080
+# ENV https_proxy socks5://127.0.0.1:1080
 
 # flask app env
 ENV WEBAPP_ENV prod
@@ -192,6 +197,8 @@ RUN set -ex; \
 			\( -type f -a \( -name '*.pyc' -o -name '*.pyo' \) \) \
 		\) -exec rm -rf '{}' +; \
 	rm -f get-pip.py \
+	# && unset http_proxy \
+	# && unset https_proxy \
 	&& /usr/local/python3/bin/pip3 install -r /home/xarc-marvin/config/requirements.txt -i https://pypi.tuna.tsinghua.edu.cn/simple
 	# && python3 /home/xarc-marvin/marvin/manager.py init \
 	# && python3 /home/xarc-marvin/marvin/manager.py migrate \
