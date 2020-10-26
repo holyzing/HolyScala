@@ -30,14 +30,21 @@ service:
 
     clusterIp：默认类型，自动分配一个仅集群内部可以访问的虚拟Ip
     NodePort：clusterIp基础上 在每个node所在的机器上暴露一个端口来实现
-    LoadBalance：在NodePort的基础上，借助cloud provider创建一个外部负载均衡器，并将请求转发到NodePort
+    LoadBalance：在NodePort的基础上，借助cloud provider创建一个外部负载均衡器，并将请求转发到NodePort LAAS
     externalName：引入外部服务到集群，供集群内部访问，就是将外部服务地址通过service做一层代理，基于kubeDns引入
     service的实现主要是基于kubeproxy实现
 
     apiserver 通过监控 kubeproxy 实现监听端点和服务发现，kubeproxy进行满足标签选择的pod监控，
     将这些pod的路由信息写到 iptables，客户端访问service也就意味着访问iptables
 
-    ipvsadm -Ln
+    headlessService：clusterIP为None的情况
+                    主要为了解决hostname 和 podname 的 变化问题,通过域名访问一组 pod
+                    <service-name>.<namespace-name>.svc.cluster.local
+                    StatefulSet 也是基于无头服务进行一个服务访问的 固定
+
+    ----------------------------------------------------------------
+    ingress：未完成，通过官方文档进行学习,然后在通过 视频学习 ，nginx-ingress
+    ----------------------------------------------------------------
 
 
 selector:

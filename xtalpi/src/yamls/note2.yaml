@@ -96,9 +96,12 @@ kubectl
     rollout undo --to-reversion |status|history|pause deployment/deploymentName
 
     label pod --overwrite=true
-    apply                     # 声明式 Deployment
-    create --record           # 命令式 ReplicationSet
-    delete --all
+    apply
+    # 声明式 Deployment
+    create --record
+    # 命令式 ReplicationSet
+    delete --all -f
+    # -f  通过文件来识别资源
     expose
     cordon
     explain

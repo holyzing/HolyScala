@@ -19,3 +19,13 @@
 13. tail -f -n
 
 14. curl
+15. uwsgi -d -ini *.ini
+16. uwsgi --reload *.pid
+17. uwsgi --stop *.pid
+
+18. netstat -antp | grep :port 查看端口由哪个服务开启
+
+19. ipvsadm -Ln
+20. nslookup
+21. dig
+22. iptables -t nat -nvL
