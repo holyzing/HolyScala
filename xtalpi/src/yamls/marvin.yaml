@@ -28,6 +28,58 @@
 #       name: http
 
 # ---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: marvin-backend
+  labels:
+    app: marvin
+    version: "0.5"
+    role: backend
+
+spec:
+  nodeSelector:
+    kubernetes.io/hostname: laojun
+
+  imagePullSecrets:
+  - name: nitrogen-harbor
+
+  volumes:
+  - name: nfs
+    nfs:
+      server: 192.168.1.179
+      path: /data/nfs/marvin/
+
+  containers:
+  - name: backend
+    imagePullPolicy: IfNotPresent
+    image: harbor.atompai.com/xet/marvin/backend:base
+    command: [ "/bin/bash", "-ce", "tail -f /dev/null" ]
+    workingDir: /home/xarc-marvin/
+    volumeMounts:
+    - mountPath: /data/static/
+      subPath: static/
+      name: nfs
+    - mountPath: /data/logs/
+      subPath: logs/backend/
+      name: nfs
+    ports:
+    - containerPort: 8080
+      protocol: TCP
+      name: backend-port
+      hostPort: 8080
+    env:
+    - name: WEBAPP_ENV
+      value: dev
+    resources:
+      limits:
+        cpu: 4
+        memory: 8Gi
+      requests:
+        cpu: 4
+        memory: 8Gi
+
+---
 
 apiVersion: apps/v1
 kind: Deployment
