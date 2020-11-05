@@ -1,0 +1,143 @@
+1-请简要说明Docker容器和虚拟机之间的相同点和不同点
+答: 相同点 均是基于宿主机的操作系统提供一套隔离的环境
+    不同点:容器是名称空间的隔离,而虚拟机是操作系统级别的隔离
+          容器占用资源少,轻量,启动快,虚拟机占用资源大,重量,启动慢
+          容器共享宿主机操作系统的基础类库的软件资源,而虚拟机只 "占用宿主机的物理资源",软件资源均需独立安装
+
+
+2-请解释Dockerfile中FROM、ENV、WORKDIR、COPY、RUN、EXPOSE、CMD分别表示什么意思
+答: FROM 新镜像的构建往往是基于某一个镜像，FROM就用于指定新镜像的基础镜像
+    ENV 设置系统环境变量
+    WORKDIR 进入容器后的默认工作目录
+    COPY 从上下文目录中复制文件或者目录到容器里的指定路径。
+    RUN  构建镜像的过程中执行命令
+    EXPOSE 容器对外暴露端口
+    CMD 运行容器时执行命令
+
+
+3-请写出构建Docker镜像、上传镜像、拉取镜像、启动容器、停止容器、查看正在运行容器的命令
+答: docker build -t|-f imageName:imageTag .
+    docker push
+    docker pull
+    docker start
+    docker stop
+    docker ps
+
+4-如何以交互式的方式进入正在运行的容器进行操作
+答: docker exec -it containerName /bin/bash
+    kubectl exec -it podName -c containerName -- /bin/bash
+
+5-如何查看正在运行的容器的实时日志？如何查看最后10条日志？
+答: docker logs -f/--follow containerName
+    docker logs --tail 10 containerName
+
+6-请以自己的理解简要说明工程代码、docker容器和k8s之间的关系。
+答: 工程代码就是我们需要隔离运行的应用
+    docker容器实现或者说支持应用运行的隔离环境
+    k8s 用于更好的管理，编排多容器应用的生命周期, 并提供一组工具保障服务的高可用
+
+7-请以自己的理解简要说明k8s能做什么
+答: k8s 是容器管理平台，用来管理可以容器化的应用，提供快速的容器调度、弹性伸缩等诸多功能实现自动化的集群管理。
+
+8-请以自己的理解简要说明k8s不能做什么（相较于Paas、Iaas）
+答: 相较于Iaas k8s 不支持软件安装服务
+    相较于Paas k8s 不支持软件开发等语言选择
+
+
+9-请以自己的理解简要说明K8S 中namespace、label、selector、volume、node、pod、service、ingress、secret的意义。
+答: namespace: 对k8s中的资源对象分配到不同的名称空间下，形成逻辑分组，然后进行分别管理
+    label : K8s中各类型对象的标签，以便于其它对象选择引用
+    selector : 一组lable 的集合，用于选择一组资源
+    volume : k8s 中用于持久化的抽象的逻辑卷
+    node : 集群中的物理节点
+    pod : k8s 集群管理的最小单位，容器的载体
+    service: 用于代理一组POD服务的反向代理服务层，以轮询的方式访问代理的POD，
+             用户不用关注具体由哪些POD提供服务，而是由service暴露，即所谓服务发现
+    ingress: 提供互联网访问service的入口,(https降级等功能)
+    secret: 用来保存小片敏感数据的k8s资源，例如密码，token，或者秘钥,为了更方便的控制如何使用数据，并减少暴露的风险。
+
+
+10-请简要解释label和selector二者之间的差异。
+答: selector 根据label 选取一组资源集合
+    label 绑定到资源上的一组键值对,作为资源属性的一部分
+    selector 使label起效的分组器,通过selector用户能够识别一组有共同特征或属性的资源对象
+    label 为 "静" selector 为 "动"
+
+
+11-请以自己的理解简要解释node、container、pod、service、ingress之间的关系。
+答: node 提供pod运行的物理环境
+    pod提供container的隔离环境以及副本数
+    service 为container(pod)服务提供负载均衡以及服务发现
+    ingress作为service的扩展提供七层的网络模型的服务访问(域名,主机名),换句话说就是提供互联网访问入口.
+
+
+12-请简要描述如下两个YAML实现了什么服务(解释说明中尽量包含先后kubectl命令)
+答:
+    kubectl create -f a.yaml
+    创建一个2副本的Deployment控制器,控制器控制标签为run=my-nginx 的POD
+    pod 中的容器应用为 nginx服务,暴露的容器端口是 80
+
+    kubectl get pods -l run=labels
+    查看pod创建情况
+    kubectl get deployment my-nginx -o wide -w
+    监视Deployment中副本创建情况
+    kubectl describe deployment my-nginx
+    查看Deployment 详细信息
+
+    kubectl create -f b.yaml
+    创建一个暴露标签为 my-nginx 的POD的service, 该service在集群内部可以通过80端口访问
+    kubectl get service my-nginx
+    查看service 基本信息
+
+13-如何查看当前K8S集群的node列表、pod列表、service列表？
+答: kubectl get nodes
+    kubectl get pods
+    kubectl get services
+
+14-如何根据pod状态查看success的pod列表（Tips：filter）？
+答: kubectl get pods | grep success
+
+
+15-如何根据labe查看对应的pod列表？
+答: kubectl get pods -l labelKey1=labelValue1,labelKey2=labelValue2, ...
+    kubectl get pods --selector labelKey1=labelValue1,labelKey2=labelValue2, ...
+
+16-如何查看某个pod的详情？
+答: kubectl describe pod podName
+
+17-如何查看pod的标准输出，service的日志（实时日志、最后10条日志、指定时间段日志）？
+答: kubectl logs -f podName -c containerName
+    kubectl logs podName -c containerName --tail 10
+    kubectl logs podName
+
+18-如何查看pod包含的container情况以及如何进入container执行相应操作？
+答: kubectl describe pod podName
+    kubectl exec -it podName -c containerName -- /bin/bash
+
+
+19-如何将服务暴露到外网访问、k8s间访问？（简要描述即可）
+答: Sevice.spec.type=NodePort 指定服务的类型为节点服务
+    Service.spec.ports.nodePort=30080 暴露给外网的端口
+    Service.spec.ports.targetPort=80 外网端口请求转发到容器端口
+
+20-如何发布Service（任意一种类型）？ （简要描述即可）
+答: 所谓服务发现就是可以寻址到服务,通过在service中设置环境变量
+    通过集群组件 CoreDNS 相关组件发现服务
+
+
+21-如何滚动更新已经发布的Service（简要列出操作步骤即可）？
+答: kubectl set image
+   kubectl edit deployment/deploymentName
+   kubectl apply -f deployment.yaml
+   以上三条命令均可更新deployment
+   更新过程中 可以 通过 以下命令查看或者监视更新情况
+   kubectl get deployment
+   kubectl describe deployment
+   kubectl rollout status deployment/deploymentName -w
+   kubectl get replicaset 可以看到每一次更新 都会创建对应的replicaSet
+
+
+
+22-如何回滚已经更新的Service（简要列出操作步骤）？
+答: kubectl rollout histroty deployment/deploymentName
+    kubectl rollout undo deployment/deploymentName --to-revision=0

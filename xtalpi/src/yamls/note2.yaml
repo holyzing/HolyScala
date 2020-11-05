@@ -1,9 +1,10 @@
-k8s中的资源类型:  # 以适用性范围来分类
+k8s中的资源类型: 以适用性范围来分类
     名称空间下的资源: 指定空间名称获取资源
-    工作负载型资源(workload): pod ReplicaSet Deployment StatefulSet DaemonSet, Job, CronJob
-    服务发现及负载均衡型资源（service Discovery LoadBalance）: Service Ingress
-    配置与存储型资源: Volume， CSI
-    特殊类型的存储卷: ConfigMap，Secret，DownloadAPI（把外部环境中的信息输出给容器）
+        工作负载型资源(workload): pod ReplicaSet Deployment StatefulSet DaemonSet, Job, CronJob
+        服务发现及负载均衡型资源（service Discovery LoadBalance）: Service Ingress
+        配置与存储型资源: Volume， CSI
+        特殊类型的存储卷: ConfigMap，Secret，DownloadAPI（把外部环境中的信息输出给容器）
+
     物理集群下的资源: Namespace，Node，Role， ClusterRole, RoleBinding, ClusterRoleBinding
     元信息定义下的资源（通过指标来定义操作）: HPA，PodTemplate, LimitRange
 
@@ -14,7 +15,7 @@ yaml:
 DNS服务：kube-system 名称下的两个pod作为 k8s内置DNS服务， 创建pod的过程中会向该DNS服务写入名称，
         同时将那两个pod中的DNS服务配置为DNS服务器 解析k8s 集群中的各种名称。
 
-Pod生命周期
+Pod生命周期:
     kubectl 调用 APIServer下发指令，APIServer 同步 ETCD 信息，kubelet 从 etcd同步信息，准备创建POD
 
     1-初始化 pause 容器
@@ -46,9 +47,9 @@ Pod生命周期
 
     探测：
       探针是由 kubelet对容器执行的定期诊断。要执行诊断，kubelet 调用容器实现的Handler。
-      ExecAction 在容器内执行指定命令。如果命令退出时返回码为0，则认为诊断成功。
-      TcpSocketAction 对指定端口上的容器的IP地址执行TCP检查。如果端口打开，则诊断被认为是成功的。
-      HTTPGetAction 对指定的端口和路径上的容器的 IP地址执行 Http get 请求，通过响应码判断诊断结果
+      ExecAction: 在容器内执行指定命令。如果命令退出时返回码为0，则认为诊断成功。
+      TcpSocketAction: 对指定端口上的容器的IP地址执行TCP检查。如果端口打开，则诊断被认为是成功的。
+      HTTPGetAction: 对指定的端口和路径上的容器的 IP地址执行 Http get 请求，通过响应码判断诊断结果
       成功 失败 未知
 
       livenessProbe：指示容器是否正在运行。如果存活探测失败，则 kubelet 会杀死容器，并且容器（pod）将
@@ -61,10 +62,10 @@ Pod生命周期
       Pod 的相位（phase）是 Pod 在其生命周期中的简单宏观概述。
           该阶段并不是对容器或 Pod 的综合汇总，也不是为了做为综合状态机Pod 相位的数量和含义是严格指定的。
           除了本文档中列举的状态外，不应该再假定 Pod 有其他的 phase 值
-          pod 的状态： 包含 规约部分和实际状态部分，这些信息被记录在 pod 对象的 Conditions 中。
+          pod 的状态: 包含 规约部分和实际状态部分，这些信息被记录在 pod 对象的 Conditions 中。
                      如果应用需要，也可以注入自定义的就绪性信息。
-          container： waiting running terminated
-          pod： pending running succeeded failed unknown
+          container: waiting running terminated
+          pod: pending running succeeded failed unknown
 
 
     1- 请求指令下达到 API接口，并将指令下达给kubelet
@@ -87,17 +88,14 @@ namespaces
 deployments
 
 kubectl
-    get -n -A --show-labels -o yaml -w
+    get -n -A --show-labels -o yaml -w --selector
     set iamge deployment/name containerName=imageName:tag
 
     edit
     scale deployment deploymentName --replicas 10
-    rollout undo --to-reversion |status|history|pause deployment/deploymentName
+    rollout undo --to-reversion |status|history --revision=2|pause deployment/deploymentName
 
     label pod --overwrite=true
-    apply                     # 声明式 Deployment
-    create --record           # 命令式 ReplicationSet
-    delete --all
     apply
     # 声明式 Deployment
     create --record
@@ -111,6 +109,7 @@ kubectl
     logs -f -c
     exec pod-name -c -it -- /bin/sh
     watch kubectl get pods -l app=nginx
+    kubectl set image deployment/a-deployment a-container=harbor.atompai.com/k8s-test/testa:v2 --record
 
 
 
