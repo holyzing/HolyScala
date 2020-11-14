@@ -30,3 +30,13 @@ Task：送往executor的工作单元
 
 quota
 metric
+
+1-spark-shell 做了什么? Driver Worker Executor Master 以及 Application 是如何工作的 ?
+2-Context UI 又是如何工作的 ?
+
+子项目: SparkSQL、Spark Streaming、GraphX、MLib、SparkR
+计算模型: MapReduce, 批处理、迭代算法、交互式查询、流处理
+大一统的软件栈，各个组件关系密切并且可以相互调用
+高效的DAG执行引擎，可以通过基于内存来高效处理数据流
+
+spark-shell --total-executor-cores 8 --executor-memory 4G --executor-cores 2 --master spark://spark-master:7077

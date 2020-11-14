@@ -29,3 +29,4 @@
 20. nslookup
 21. dig
 22. iptables -t nat -nvL
+23. telnet ip port
