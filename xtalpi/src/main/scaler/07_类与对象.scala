@@ -1,4 +1,4 @@
-package com.holy.scala
+package scaler
 
 /**
  * scala 中没有 static 关键字，所以没有静态方法供虚拟机直接调用，为了添加 static 特性，提供了 object 关键字定义一个单例对象。
@@ -53,8 +53,9 @@ class Location private( val xc: Int,  val yc: Int,  val zc :Int) extends Point(x
     }
 
     // 重写一个函数 可以改变其返回类型
-    override def toString(): String ={
-        return String.format("location is : (%s, %s, %s)", this.xc, this.yc, this.zc)
+    override def toString: String ={
+        // TODO return String.format("location is : (%s, %s, %s)", this.xc, this.yc, this.zc)
+        return ""
     }
 }
 

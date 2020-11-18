@@ -1,4 +1,4 @@
-package com.holy.scala
+package scaler
 
 /**
  * 提取器是从传递给它的对象中提取出构造该对象的参数。

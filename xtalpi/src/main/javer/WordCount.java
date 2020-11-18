@@ -1,4 +1,4 @@
-package com.holy.xtalpi;
+package javer;
 
 import org.apache.spark.SparkConf;
 

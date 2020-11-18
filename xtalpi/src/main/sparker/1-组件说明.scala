@@ -27,7 +27,7 @@ Stage：每个作业被分成更小的任务集，称为阶段，这些阶段相
 Task：送往executor的工作单元
 */
 
-
+/**
 quota
 metric
 
@@ -39,4 +39,33 @@ metric
 大一统的软件栈，各个组件关系密切并且可以相互调用
 高效的DAG执行引擎，可以通过基于内存来高效处理数据流
 
-spark-shell --total-executor-cores 8 --executor-memory 4G --executor-cores 2 --master spark://spark-master:7077
+spark-shell --total-executor-cores 8 --executor-memory 1G --executor-cores 2 --master spark://spark-master:7077
+
+spark standalong 模式的执行流程：
+
+1- 通过配置 来确定 Application 运行所需的资源以及在哪个环境上运行
+2- spark-submit 提交Application的配置信息 到 Master，完成注册。
+3- Master 根据请求信息 进行Worker扫描，找到满足数量且满足要求的Worker，告知其启动符合配额的Executor
+4- Executor 启动之后连接 Driver 完成到Driver信息的注册。
+5- Driver根据注册的Executor信息开始进行Programer以及一些Application指定的依赖和资源文件到Worker的拷贝。
+6- 拷贝完成之后 植入我们Application中的SparkContext 将发送Task 到Executor执行。
+   task就是我们在写Application应用中指定的算子函数
+7- Driver 和 Executor 在 Application 的整个生命周期中都会产生通信，保持二者之间的通信是关键的
+   所以说尽可能让Driver以cluster 模式运行，保证其在集群网络里进行通信，由于网络通信造成整个集群的性能下降。
+        Executor 到 Driver 的信息注册
+        Executor 执行一个算子结束后通知 Driver 进行下一步的处理
+        Driver 发送 Application Programer 及其依赖 到Executor（所在的Worker）
+8-
+
+SparkContext
+SparkSession
+
+疑问
+1- 是由谁来发送 Application Programer 到谁 ？
+2- 是由谁来触发在 Executor 中 执行 task
+3- 新增worker 之后 master通知 Driver协调资源分配 ？
+4- 统一的数据载入入口，如果是本地文件系统，则每一个worker载入的文件不一样呢？ 是怎么处理 ？
+
+Hadoop的MapReduce计算框架，JobTracker和TaskTracker之间由于是通过heartbeat的方式来进行的通信和传递数据，
+会导致非常慢的执行速度，而Spark具有出色而高效的Akka和Netty通信系统，通信效率极高。
+*/

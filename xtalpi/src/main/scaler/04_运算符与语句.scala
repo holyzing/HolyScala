@@ -1,4 +1,4 @@
-package com.holy.scala
+package scaler
 
 import scala.util.control.Breaks
 

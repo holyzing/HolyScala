@@ -1,4 +1,4 @@
-package com.holy.xtalpi;
+package javer;
 
 public interface DearInterface {
     // 接口中定义的方法默认是 public 且 abstract

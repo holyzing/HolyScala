@@ -1,4 +1,4 @@
-package com.holy.scala
+package scaler
 
 import scala.runtime.Nothing$
 
@@ -50,7 +50,7 @@ object Var_Val{ // class dose not correspond to file name
     // val e = Symbol("x")             // scla 和 java 一样不能重复定义一个变量，这和 python 的 引用指向是有一定区别的
     val f = Symbol("x")
     val g: Null = null
-    
+
     val multiLineString =
     """
       |

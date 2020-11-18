@@ -1,4 +1,4 @@
-package com.holy.scala
+package scaler
 
 import org.apache.spark.scheduler.SparkListenerTaskGettingResult
 

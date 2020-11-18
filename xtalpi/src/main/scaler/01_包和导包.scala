@@ -1,3 +1,5 @@
+package scaler
+
 /*×
 Scala 特性
   面向对象特性
@@ -44,7 +46,6 @@ Scala 特性
 // import的效果从开始延伸到语句块的结束
 // 默认情况下，Scala 总会引入 java.lang._ 、 scala._ 和 Predef._
 
-package com.holy.scala
 
 import java.lang._
 import java.awt.{Window, event}

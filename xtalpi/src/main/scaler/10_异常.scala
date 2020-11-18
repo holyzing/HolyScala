@@ -1,4 +1,4 @@
-package com.holy.scala
+package scaler
 
 import java.io.{FileNotFoundException, FileReader, IOException}
 

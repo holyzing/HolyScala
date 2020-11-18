@@ -1,4 +1,4 @@
-package com.holy.scala
+package scaler
 
 object accessDecorator {
     /**
