@@ -69,3 +69,12 @@ SparkSession
 Hadoop的MapReduce计算框架，JobTracker和TaskTracker之间由于是通过heartbeat的方式来进行的通信和传递数据，
 会导致非常慢的执行速度，而Spark具有出色而高效的Akka和Netty通信系统，通信效率极高。
 */
+
+/**
+RDD: resilient distribute dataset
+弹性分布式数据集
+
+像java中 的HashMap或者是List一样的数据集合的索引描述
+一个RDD 对象中定义了一组分区，分区中定义了其所在的节点信息以及每个区中所映射的数据索引信息
+
+*/

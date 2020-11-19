@@ -8,3 +8,4 @@ target/
 tmp/
 core-site.xml
 hdfs-site.xml
+/.metadata/

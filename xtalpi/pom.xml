@@ -16,6 +16,16 @@
                 </configuration>
             </plugin>
         </plugins>
+
+        <resources>
+            <resource>
+                <directory>src/resources</directory>
+                <includes>
+                    <include>*.xml</include>
+                </includes>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
     </build>
     <packaging>jar</packaging>
 
