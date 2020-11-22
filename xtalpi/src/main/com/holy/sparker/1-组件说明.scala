@@ -41,6 +41,8 @@ metric
 
 spark-shell --total-executor-cores 8 --executor-memory 1G --executor-cores 2 --master spark://spark-master:7077
 
+spark-submit --class com.holy.sparker.WordCount --total-executor-cores 4 --executor-memory 1G --executor-cores 2 --master spark://spark-master:7077 holy-0.0.1-SNAPSHOT.jar
+
 spark standalong 模式的执行流程：
 
 1- 通过配置 来确定 Application 运行所需的资源以及在哪个环境上运行

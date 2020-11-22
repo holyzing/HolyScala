@@ -1,4 +1,4 @@
-package scaler
+package com.holy.scaler
 
 /**
  * scala 中没有 static 关键字，所以没有静态方法供虚拟机直接调用，为了添加 static 特性，提供了 object 关键字定义一个单例对象。

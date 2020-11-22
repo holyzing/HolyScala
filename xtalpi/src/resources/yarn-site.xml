@@ -15,5 +15,8 @@
 <configuration>
 
 <!-- Site specific YARN configuration properties -->
-
+    <property>
+        <name>yarn.resourcemanager.principal</name>
+        <value>nn/_HOST@XTALPI-BJ.COM</value>
+    </property>
 </configuration>

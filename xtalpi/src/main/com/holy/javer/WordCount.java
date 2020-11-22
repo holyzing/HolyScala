@@ -1,4 +1,4 @@
-package javer;
+package com.holy.javer;
 
 import org.apache.spark.SparkConf;
 

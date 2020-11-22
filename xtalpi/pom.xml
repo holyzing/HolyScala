@@ -2,14 +2,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.holy</groupId>
-    <artifactId>xtalpi</artifactId>
+    <groupId>com</groupId>
+    <artifactId>holy</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.1</version>
                 <configuration>
                     <source>8</source>         <!-- default: 1.5 -->
                     <target>8</target>
@@ -42,15 +43,25 @@
             <artifactId>junit</artifactId>
             <version>4.11</version>
         </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-core_2.12</artifactId>
-            <version>3.0.1</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.spark</groupId>
-            <artifactId>spark-sql_2.12</artifactId>
-            <version>3.0.1</version>
-        </dependency>
+<!--
+    完全可以将本地spark 的安装目录和hadoop目录作为classpath加入到当前工作目录,而用 spark-shell则会自动 将sparkhome下的jar加入
+    spark连接hadoop 应该不需要每个 spark 节点安装 Hadoop
+-->
+
+<!--        <dependency>-->
+<!--            <groupId>org.apache.spark</groupId>-->
+<!--            <artifactId>spark-core_2.12</artifactId>-->
+<!--            <version>3.0.1</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>org.apache.spark</groupId>-->
+<!--            <artifactId>spark-sql_2.12</artifactId>-->
+<!--            <version>3.0.1</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.clearspring.analytics</groupId>-->
+<!--            <artifactId>stream</artifactId>-->
+<!--            <version>2.9.5</version>-->
+<!--        </dependency>-->
     </dependencies>
 </project>

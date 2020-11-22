@@ -1,4 +1,4 @@
-package scaler
+package com.holy.scaler
 
 /**
  * Scala Trait(特征) 相当于 Java 的接口，但是比接口的功能强大，可以定义属性(java8也可以)以及方法的实现。

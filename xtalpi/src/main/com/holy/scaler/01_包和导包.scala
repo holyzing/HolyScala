@@ -1,4 +1,4 @@
-package scaler
+package com.holy.scaler
 
 /*×
 Scala 特性

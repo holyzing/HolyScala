@@ -1,42 +1,56 @@
 
-package sparker
+package com.holy.sparker
 
 import java.net.URLClassLoader
+
+import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.apache.hadoop.security.UserGroupInformation
 
+/**
+ * 1- Exception in thread "main" java.io.IOException: Can't get Master Kerberos principal for use as renewer
+ * 2- java.lang.ClassNotFoundException: WordCount
+ * 3- Failed on local exception: java.io.IOException: Broken pipe
+ * 4- SIMPLE authentication is not enabled.  Available:[TOKEN, KERBEROS]
+ */
 object WordCount {
     def main(args: Array[String]): Unit = {
-        // val hadoop1Home = System.getenv("TEST")
-        // System.setProperty("LD_LIBRARY_PATH", hadoop1Home + "/lib/native/")
-        // val hadoop2Home = sys.env.get("TEST")
+        // val hadoop1Home = sys.env.get("TEST")
+        // val hadoop2Home = System.getenv("TEST")
         // sys.env.toSet("LD_LIBRARY_PATH", hadoop2Home + "/lib/native/")
+        // System.setProperty("LD_LIBRARY_PATH", hadoop1Home + "/lib/native/")
+        // System.setProperty("HADOOP_CONF_DIR", "/home/holyzing/snap/apache/hadoop-2.7.7/etc/hadoop/")
+        // System.setProperty("HADOOP_CLASSPATH", "/home/holyzing/snap/apache/hadoop-2.7.7/etc/hadoop/")
         val classLoader = Thread.currentThread.getContextClassLoader
         val urlclassLoader = classLoader.asInstanceOf[URLClassLoader]
         val urls = urlclassLoader.getURLs
         for (url <- urls) {
-            if (url.getPath.endsWith(".xml")){
+            if (url.getPath.contains("target")){
                 println("------------------>" + url)
             }
         }
-        val master = "local"                         // "spark://spark-master:7077"
+        val master = "spark://spark-master:7077"  // local
         val username = "houleilei"
         val hdfsHome = "/home/holyzing/"
         val hdfsPath = "hdfs://hadoop01.stor:8020"  // 50070 web 管理端口  8020 rpc调用
         val keytabPath = "/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi/src/resources/houleilei.client.keytab"
 
+        val conf = new SparkConf().setJars(Array[String]("/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi/target/holy-0.0.1-SNAPSHOT.jar"))
+
         val spark = SparkSession.builder()
-            .config("spark.cores.max", 8)
+            .config(conf)
+            .config("spark.submit.deployMode", "client")
+            .config("spark.cores.max", 4)
             .config("spark.executor.cores", 2)
             .config("spark.driver.memory", "1g")
             .config("spark.executor.memory", "1g")
             .config("spark.default.parallelism", "8")
             .appName("FisrtStep")
             .master(master).getOrCreate()
-
+        // .config("spark.driver.extraClassPath", "/home/holyzing/snap/apache/hadoop-2.7.7/etc/")
+        // .config("spark.yarn.principal", "houleilei@XTALPI-BJ.COM")
         // .config("spark.security.credentials.hive.enabled", "false")
         // .config("spark.security.credentials.hbase.enabled", "false")
-        // .config("spark.yarn.principal", "houleilei@XTALPI-BJ.COM")
         // .config("spark.yarn.keytab", keytabPath)
 
         // http://hadoop01.stor:50070   // hdfs://10.111.32.184:8020
@@ -68,7 +82,7 @@ object WordCount {
         UserGroupInformation.loginUserFromKeytab(username, keytabPath)
         val rdd = spark.sparkContext.textFile(hdfsPath + hdfsHome + "test.txt")
         rdd.foreach(x => println(x))  // 当访问内容的时候 RDD 才会去加载数据
-        rdd.saveAsTextFile(hdfsPath + hdfsHome + "test2.txt")
+        rdd.saveAsTextFile(hdfsPath + hdfsHome + "output")
     }
 }
 

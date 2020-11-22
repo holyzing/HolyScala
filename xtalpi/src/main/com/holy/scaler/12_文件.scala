@@ -1,4 +1,4 @@
-package scaler
+package com.holy.scaler
 
 import java.io.{File, PrintWriter}
 
