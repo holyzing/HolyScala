@@ -19,6 +19,18 @@ def hdfs_connect_demo():
         print(type(result), result)
 
 
+def pyspark_api():
+    text_file_path = "/home/holyzing/Desktop/marvin-prod-20201125.db"
+    sc = SparkConf()
+    sc.setMaster("local[*]")
+    sc.setAppName("PysaprkApi")
+    spark = SparkSession.builder(sc).getOrCreate()
+    text_file = spark.read.text(text_file_path)
+    print(text_file.first(), text_file.count())
+    line_with_insert = text_file.filter(text_file.value.contains("insert"))
+    print(line_with_insert.count())
+
+
 if __name__ == '__main__':
     # if len(sys.argv) != 2:
     #     print("Usage: wordcount <file>", file=sys.stderr)

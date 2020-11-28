@@ -6,6 +6,7 @@
 *.keytab
 target/
 tmp/
+*site.xml
 core-site.xml
 hdfs-site.xml
 /.metadata/
