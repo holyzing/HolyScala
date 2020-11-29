@@ -1,12 +1,19 @@
 package com.holy.sparker
 
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{Encoder, SparkSession}
+import org.apache.spark.sql.SparkSession
 
 object SparkAPI {
 
-    val filePath = "/home/holyzing/Desktop/marvin-prod-20201125.db"
-    // "C:\\Users\\holyz\\Desktop\\spark-test\\player.py
+    var filePath: String = ""
+    val os: String = System.getProperty("os.name")
+
+    if (os != null && os.toLowerCase().indexOf("linux")> -1){
+        filePath = "/home/holyzing/Desktop/marvin-prod-20201125.db"
+    } else {
+        filePath = "C:\\Users\\holyz\\Desktop\\spark-test\\player.py"
+    }
+
 
     def probelms(): Unit = {
         val str: String = "大声道撒大所大所"
@@ -114,7 +121,7 @@ object SparkAPI {
         // val insertCount = textFile.filter(line => line.contains("insert")).count()  // 使用了泛型
         // println(textFile, textFile.getClass)  // org.apache.spark.rdd.MapPartitionsRDD
         // println(textFile.count(), textFile.first())
-        textFile.map(line => line.split("").length)
+        textFile.map(line =>  line.split("").length)
         sc.stop()
     }
 }
@@ -122,3 +129,7 @@ object SparkAPI {
 class SparkAPI {
 
 }
+
+
+
+
