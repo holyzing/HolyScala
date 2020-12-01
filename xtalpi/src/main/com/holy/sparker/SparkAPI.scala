@@ -112,6 +112,13 @@ object SparkAPI {
     }
 
     def rddApi(): Unit = {
+        /**
+         * 共享变量是一种可以在并行操作之间共享使用的变量。默认情况
+         * 下，当Spark把一系列任务调度到不同节点上运行时，Spark会同时把每个变量的副本和任务代码一起发送给
+         * 各个节点。但有时候，我们需要在任务之间，或者任务和驱动器之间共享一些变量。Spark 支持两种类型的
+         * 共享变量：广播变量 和 累加器，广播变量可以用于在各个节点上缓存数据，而累加器则是用来执行跨节点
+         * 的 “累加” 操作，
+         */
         val conf = new SparkConf()
         conf.setMaster("local[*]")
         conf.setAppName("SparRDDApi")
@@ -123,6 +130,9 @@ object SparkAPI {
         // println(textFile.count(), textFile.first())
         textFile.map(line =>  line.split("").length)
         sc.stop()
+
+        val arr = Argit ray(1, 2, 3, 4, 5)
+        val distData = sc.parallelize(arr)
     }
 }
 

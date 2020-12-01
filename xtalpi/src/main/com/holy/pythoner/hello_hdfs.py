@@ -30,6 +30,12 @@ def pyspark_api():
     line_with_insert = text_file.filter(text_file.value.contains("insert"))
     print(line_with_insert.count())
 
+"""
+    counts = lines.flatMap(lambda x: x.split(' ')).map(lambda x: (x, 1)).reduceByKey(add)
+    PYSPARK_DRIVER_PYTHON=ipython ./bin/pyspark
+    PYSPARK_DRIVER_PYTHON=jupyter PYSPARK_DRIVER_PYTHON_OPTS=notebook ./bin/pyspark
+"""
+
 
 if __name__ == '__main__':
     # if len(sys.argv) != 2:
