@@ -1,5 +1,7 @@
 package com.holy.sparker
 
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.mapred.{InputFormat, InputSplit, JobConf, RecordReader, Reporter}
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.SparkSession
 
@@ -21,7 +23,7 @@ object SparkAPI {
         val lengthText = str.length // str.length() 是一样的
         println(sizeText.getClass, sizeText, lengthText.getClass, lengthText)
 
-        /**
+        /*
          * JAVA 中 length 是 数组的属性 length() 是字符串的方法, size() 是集合的方法
          */
     }
@@ -119,20 +121,44 @@ object SparkAPI {
          * 共享变量：广播变量 和 累加器，广播变量可以用于在各个节点上缓存数据，而累加器则是用来执行跨节点
          * 的 “累加” 操作，
          */
+        import org.apache.spark.SparkContext._
+
         val conf = new SparkConf()
         conf.setMaster("local[*]")
         conf.setAppName("SparRDDApi")
         val sc = new SparkContext(conf)
         sc.setLogLevel("warn")
-        val textFile = sc.textFile(filePath)
-        // val insertCount = textFile.filter(line => line.contains("insert")).count()  // 使用了泛型
+        // 分区数不能小于 block 数, 默认一个block一个分区4
+        val textFile = sc.textFile(filePath, 4) // RDD[String]
         // println(textFile, textFile.getClass)  // org.apache.spark.rdd.MapPartitionsRDD
-        // println(textFile.count(), textFile.first())
-        textFile.map(line =>  line.split("").length)
-        sc.stop()
+        // val insertCount = textFile.filter(line => line.contains("insert")).count()  // 使用了泛型
+        // textFile.map(line =>  line.split("").length)
 
-        val arr = Argit ray(1, 2, 3, 4, 5)
+        // val wholeTextFile =  sc.wholeTextFiles(filePath) // RDD[(String, String)]
+        // sc.sequenceFile(filePath, Int.getClass, String.getClass, minPartitions = 1)
+
+        // textFile.saveAsObjectFile("java对象序列化的方式序列化, 不如 AVro 高效")
+        // sc.objectFile("加载被序列化的RDD")
+
+        /**
+        val inputFormat = new InputFormat[String, Int] {
+            override def getSplits(jobConf: JobConf, i: Int): Array[InputSplit] = ???
+            override def getRecordReader(inputSplit: InputSplit,
+                                         jobConf: JobConf, reporter: Reporter): RecordReader[String, Int] = ???
+        }
+        sc.hadoopRDD(new JobConf(), inputFormat.getClass, "".getClass, Int.getClass)
+        sc.newAPIHadoopRDD(Configuration ,"".getClass, "".getClass, 8.getClass)
+        */
+
+        /*
+            action 算子在聚合后,会将聚合结果传回给 Driver,
+            例如reduce 和  reduceByKey, 前者聚合返回一个泛型指定的类型,而后者则返回一个 RDD这种的 Map 集合
+            transformation 是懒执行的, 当触发action 操作的时候,才会 触发 transfer,并不会在driver端保存中间数据,
+            中间过程转换形成 的 RDD 可以调用 cache 和 persist 进行持久化,以便于后续重复使用,而不需要重新计算
+         */
+        val arr = Array(1, 2, 3, 4, 5)
         val distData = sc.parallelize(arr)
+        sc.stop()
     }
 }
 
