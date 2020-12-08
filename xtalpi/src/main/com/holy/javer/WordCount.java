@@ -3,12 +3,41 @@ package com.holy.javer;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.JavaRDD;
 import org.apache.spark.SparkConf;
+import org.apache.spark.api.java.function.Function;
+import org.apache.spark.api.java.function.Function2;
 
 
 import java.util.Iterator;
 import java.util.Properties;
 
+
+class GetLength implements Function<String, Integer> {
+    public Integer call(String s) { return s.length(); }
+}
+class Sum implements Function2<Integer, Integer, Integer> {
+    public Integer call(Integer a, Integer b) { return a + b; }
+}
+
 public class WordCount {
+
+    public void rddApi(){
+        SparkConf conf = new SparkConf().setAppName("javaRDDApi").setMaster("local[*]");
+        JavaSparkContext sc = new JavaSparkContext(conf);
+        JavaRDD<String> lines = sc.textFile("data.txt", 3);
+        JavaRDD<Integer> lineLengths = lines.map(new Function<String, Integer>() {
+            public Integer call(String s) { return s.length(); }
+        });
+        int totalLength = lineLengths.reduce(new Function2<Integer, Integer, Integer>() {
+            public Integer call(Integer a, Integer b) { return a + b; }
+        });
+
+
+        JavaRDD<String> lines2 = sc.textFile("data.txt");
+        JavaRDD<Integer> lineLengths2 = lines.map(new GetLength());
+        int totalLength2 = lineLengths.reduce(new Sum());
+
+    }
+
     public static void main(String[] args) {
         System.setProperty("spark.master", "local");
         Properties pops = System.getProperties();
