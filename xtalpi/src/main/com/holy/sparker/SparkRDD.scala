@@ -202,7 +202,7 @@ object SparkRDD {
         }
         sc.hadoopRDD(new JobConf(), inputFormat.getClass, "".getClass, Int.getClass)
         sc.newAPIHadoopRDD(Configuration ,"".getClass, "".getClass, 8.getClass)
-        */
+         */
 
         /*
             action 算子在聚合后,会将聚合结果传回给 Driver,
@@ -409,4 +409,3 @@ object SparkRDD {
 class SparkRDD {
 
 }
-

@@ -20,6 +20,7 @@ object SparkDataset {
         datasetApi()
     }
 
+    case class Person(name: String, age: Long)
     def datasetApi(): Unit = {
         val spark = SparkSession.builder().appName("SparkDatasetApi").master("local[*]").getOrCreate()
         // For implicit conversions like converting RDDs to DataFrames
@@ -56,7 +57,7 @@ object SparkDataset {
          *  operations like filtering, sorting and hashing without deserializing the bytes back into an object.
          */
         import spark.implicits._
-        case class Person(name: String, age: Long)
+
         val caseClassDS = Seq(Person("Andy", 32)).toDS()
         caseClassDS.show()
 
