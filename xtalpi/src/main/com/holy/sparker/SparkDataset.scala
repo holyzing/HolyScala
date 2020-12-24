@@ -8,11 +8,14 @@ object SparkDataset {
     val os: String = System.getProperty("os.name")
 
     var sparkHome: String = _  // IDE 推荐使用 _ 而不是 null, scala 中 的 _ 代表什么 ? println(_) 会报错
+    var workHome: String = _
 
     if (os != null && os.toLowerCase().indexOf("linux")> -1){
         sparkHome = "/home/holyzing/snap/apache/spark-3.0.1-bin-hadoop2.7"
+        workHome = "/home/holyzing/xtalpi/My/_03_scala/xtalpi"
     } else {
         sparkHome = "F:/apache/spark-3.0.1-bin-hadoop2.7"
+        workHome = "F:/mywork/Scala/xtalpi"
     }
     sparkHome = sys.env.getOrElse("SPARK_HOME", sparkHome)
 
