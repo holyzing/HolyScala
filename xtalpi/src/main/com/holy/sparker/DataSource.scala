@@ -61,25 +61,26 @@ object DataSource {
         // Not allowing to set spark.sql.warehouse.dir or hive.metastore.warehouse.dir in SparkSession's options,
         // it should be set statically for cross-session usages
 
-        val usersDF = spark.sql("SELECT * FROM parquet.`"+ usersParquetPath +"`")
-        // usersDF.write.mode(SaveMode.Ignore).save(tempPath + "/parquet.saveMode")
+        def partion(): Unit ={
+            val usersDF = spark.sql("SELECT * FROM parquet.`"+ usersParquetPath +"`")
+            // usersDF.write.mode(SaveMode.Ignore).save(tempPath + "/parquet.saveMode")
 
-        usersDF.foreach(x => println(x))
-        // [Alyssa,null,WrappedArray(3, 9, 15, 20)] [Ben,red,WrappedArray()]
+            usersDF.foreach(x => println(x))
+            // [Alyssa,null,WrappedArray(3, 9, 15, 20)] [Ben,red,WrappedArray()]
 
-        // usersDF.write.mode("overwrite").partitionBy("favorite_color")
-        //     .format("parquet").save(tempPath + "/namesPartByColor.parquet")
+            // usersDF.write.mode("overwrite").partitionBy("favorite_color")
+            //     .format("parquet").save(tempPath + "/namesPartByColor.parquet")
 
-        //  data 按column 分区后,会为每一个分区持久化元信息,这为更多 类 SQL 的 DDL 操作 成为现实
+            //  data 按column 分区后,会为每一个分区持久化元信息,这为更多 类 SQL 的 DDL 操作 成为现实
 
-        // It is possible to use both partitioning and bucketing for a single table:
-        usersDF.write.partitionBy("favorite_color")
-            .bucketBy(42, "name").saveAsTable("users_partitioned_bucketed")
-        // partitionBy creates a directory structure as described in the Partition Discovery section.
-        // Thus, it has limited applicability to columns with high cardinality.
-        // In contrast bucketBy distributes data across a fixed number of buckets
-        // and can be used when the number of unique values is unbounded.
-
+            // It is possible to use both partitioning and bucketing for a single table:
+            usersDF.write.partitionBy("favorite_color")
+                .bucketBy(42, "name").saveAsTable("users_partitioned_bucketed")
+            // partitionBy creates a directory structure as described in the Partition Discovery section.
+            // Thus, it has limited applicability to columns with high cardinality.
+            // In contrast bucketBy distributes data across a fixed number of buckets
+            // and can be used when the number of unique values is unbounded.
+        }
         // ETL 经过抽取（extract）、转换（transform）、加载（load）
         /**
          * spark 读取 metastore_db(derby) 可通过 spark.driver.extraJavaOptions -Dderby.system.home=/tmp/derby 配置位置
