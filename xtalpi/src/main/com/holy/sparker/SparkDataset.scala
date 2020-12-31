@@ -12,7 +12,7 @@ object SparkDataset {
 
     if (os != null && os.toLowerCase().indexOf("linux")> -1){
         sparkHome = "/home/holyzing/snap/apache/spark-3.0.1-bin-hadoop2.7"
-        workHome = "/home/holyzing/xtalpi/My/_03_scala/xtalpi"
+        workHome = "/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi"
     } else {
         sparkHome = "F:/apache/spark-3.0.1-bin-hadoop2.7"
         workHome = "F:/mywork/Scala/xtalpi"
