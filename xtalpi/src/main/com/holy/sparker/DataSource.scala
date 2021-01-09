@@ -1,6 +1,6 @@
 package com.holy.sparker
 
-import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.{SaveMode, SparkSession}
 
 object DataSource {
     def main(args: Array[String]): Unit = {
@@ -10,32 +10,230 @@ object DataSource {
         val peopleJsonPath = SparkDataset.sparkHome +  "/examples/src/main/resources/people.json"
         val usersParquetPath = SparkDataset.sparkHome + "/examples/src/main/resources/users.parquet"
         val spark = SparkSession.builder().appName("SparkDataSource").master("local[*]").getOrCreate()
-        // Encoders for most common types are automatically provided by importing spark.implicits._
 
         // Encoders for most common types are automatically provided by importing spark.implicits._
         import spark.implicits._
 
         def parquetTest(): Unit ={
-            val spark: SparkSession = spark
             // NOTE parquet
+            /**
+             * Parquet is a columnar format that is supported by many other data processing systems.
+             * Spark SQL provides support for both reading and writing Parquet files
+             * that automatically preserves the schema of the original data. When reading Parquet files,
+             * all columns are automatically converted to be nullable for compatibility reasons.
+             */
+            val peopleDF = spark.read.json(peopleJsonPath)
+            val peopleParquetPath = tempPath + "/people.parquet"
+            // DataFrames can be saved as Parquet files, maintaining the schema information
+            peopleDF.write.mode(SaveMode.Overwrite).parquet(peopleParquetPath)
+
+            // Parquet files are self-describing so the schema is preserved
+            val parquetFileDF = spark.read.parquet(peopleParquetPath)
+            parquetFileDF.createOrReplaceTempView("parquetFile")
+            val namesDF = spark.sql("SELECT name FROM parquetFile WHERE age BETWEEN 13 AND 19")
+            namesDF.map(attributes => "Name: " + attributes(0)).show()
+
             val usersDF = spark.read.load(usersParquetPath)
             println(usersDF.columns.mkString("Array(", ", ", ")"))
-            val usersDF2 =  spark.read.parquet(usersParquetPath)
-            usersDF2.write.parquet(tempPath + "/parquet.test")
-            usersDF.select("name", "favorite_color").write.save(tempPath + "/parquet.namesAndFavColors")
+            usersDF.select("name", "favorite_color").write.mode(
+                SaveMode.Ignore).save(tempPath + "/parquet.namesAndFavColors")
+
+            // NOTE Partition Discovery
+            /**
+             * Table partitioning is a common optimization approach used in systems like Hive.
+             * In a partitioned table, data are usually stored in different directories,
+             * with partitioning column values encoded in the path of each partition directory.
+             * All built-in file sources are able to discover and infer partitioning information automatically
+             * (including Text/CSV/JSON/ORC/Parquet)
+             *
+             * By passing path/to/table to either SparkSession.read.parquet or SparkSession.read.load,
+             * Spark SQL will automatically extract the partitioning information from the paths
+             */
+
+            //the automatic type inference can be configured by
+            spark.sql("set spark.sql.sources.partitionColumnTypeInference.enabled=true")
+
+            /**
+             *  Starting from Spark 1.6.0, partition discovery only finds partitions under the given paths by default.
+             *  if users pass path/to/table/gender=male to either SparkSession.read.parquet or SparkSession.read.load,
+             *  "gender" will not be considered as a partitioning column.
+             *
+             *  If users need to specify the base path that partition discovery should start with,
+             *  they can set "basePath" in the data source options.
+             *  For example, when path/to/table/gender=male is the path of the data and
+             *  users set basePath to path/to/table/, gender will be a partitioning column.
+             */
+
+            // NOTE Schema Merging
+            /**
+             * Like Protocol Buffer, Avro, and Thrift, Parquet also supports schema evolution.
+             * Users can start with a simple schema, and gradually add more columns to the schema as needed.
+             * In this way, users may end up with multiple Parquet files with different but mutually compatible schemas.
+             * The Parquet data source is now able to automatically detect this case and merge schemas of all these files.
+             *
+             * Since schema merging is a relatively expensive operation, and is not a necessity in most cases.
+             * we turned it off by default starting from 1.5.0. You may enable it by
+             *
+             * 1. setting data source option mergeSchema to true when reading Parquet files
+             * 2. setting the global SQL option spark.sql.parquet.mergeSchema to true
+             */
+
+            val squaresDF = spark.sparkContext
+                .makeRDD(1 to 5).map(i => (i, i * i)).toDF("value", "square")
+            squaresDF.write.mode(SaveMode.Ignore).parquet(tempPath + "/test_table/key=1")
+
+            // NOTE  注意理解列式存储 ....
+            // adding a new column and dropping an existing column
+            val cubesDF = spark.sparkContext
+                .makeRDD(6 to 10).map(i => (i, i * i * i)).toDF("value", "cube")
+            cubesDF.write.mode(SaveMode.Ignore) parquet(tempPath + "/test_table/key=2")
+
+            val mergedDF = spark.read.option("mergeSchema", "true").parquet(tempPath + "/test_table")
+            mergedDF.printSchema()  // TODO 笛卡尔积 全连接 ??
+            mergedDF.show()
+
+            // NOTE Hive metastore Parquet table conversion
+            /**
+             * When reading from Hive metastore Parquet tables and
+             * writing to non-partitioned Hive metastore Parquet tables,
+             * Spark SQL will try to use its own Parquet support instead of Hive SerDe for better performance.
+             *
+             * This behavior is controlled by the "spark.sql.hive.convertMetastoreParquet" configuration,
+             * and is turned on by default.
+             */
+
+            // NOTE Hive/Parquet Schema Reconciliation
+            /**
+             * There are two key differences between Hive and Parquet from the perspective of table schema processing.
+             * 1- Hive is case insensitive, while Parquet is not
+             * 2- Hive considers all columns nullable, while nullability in Parquet is significant
+             *
+             * Due to this reason, we must reconcile Hive metastore schema with Parquet schema
+             * when converting a Hive metastore Parquet table to a Spark SQL Parquet table.
+             * The reconciliation rules are:
+             * 1 - Fields that have the same name in both schema must have the same data type regardless of nullability.
+             *     The reconciled field should have the data type of the Parquet side, so that nullability is respected.
+             * 2 - The reconciled schema contains exactly those fields defined in Hive metastore schema.
+             *     Any fields that only appear in the
+             *          1 - Parquet schema are dropped in the reconciled schema.
+             *          2 - Hive metastore schema are added as nullable field in the reconciled schema.
+             */
+
+            // NOTE Metadata Refreshing
+            /**
+             * Spark SQL caches Parquet metadata for better performance.
+             * When Hive metastore Parquet table conversion is enabled,
+             * metadata of those converted tables are also cached.
+             * If these tables are updated by Hive or other external tools,
+             * you need to refresh them manually to ensure consistent metadata.
+             */
+            spark.catalog.refreshTable("parquetFile")
+            spark.sql("REFRESH TABLE parquetFile;")
+
+            // NOTE Configuration
+            /**
+             * Configuration of Parquet can be done using the setConf method on SparkSession or
+             * by running SET key=value commands using SQL.
+             *
+             * write option : parquet.enable.dictionary
+             */
         }
+
+        def orcTest(): Unit ={
+            // NOTE ORC
+            /**
+             * Since Spark 2.3, Spark supports a vectorized ORC reader with a new ORC file format for ORC files.
+             * To do that, the following configurations are newly added.
+             * The vectorized reader is used for the native ORC tables (e.g., the ones created using the clause USING ORC)
+             * when spark.sql.orc.impl is set to native and spark.sql.orc.enableVectorizedReader is set to true.
+             * For the Hive ORC serde tables (e.g., the ones created using the clause USING HIVE OPTIONS (fileFormat 'ORC')),
+             * the vectorized reader is used when spark.sql.hive.convertMetastoreOrc is also set to true.
+             */
+            // 是否启用dictionary编码；默认大小与page.size相同，为1M。dictionary创建时会占用较多的内存。
+            val usersDF = spark.read.load(usersParquetPath)
+            usersDF.write.format("orc")
+                .option("orc.bloom.filter.columns", "favorite_color")
+                .option("orc.dictionary.key.threshold", "1.0")
+                .option("orc.column.encoding.direct", "name")
+                .save(tempPath +  "/orc/users_with_options.orc")
+        }
+
+        def jsonTest(){
+            // NOTE json
+            /**
+             * Note that the file that is offered as a json file is not a typical JSON file.
+             * Each line must contain a separate, self-contained valid JSON object
+             *
+             * For a regular multi-line JSON file, set the multiLine option to true.
+             */
+            // val peopleDF = spark.read.format("json").load(peopleJsonPath)
+            val peopleDF = spark.read.json(peopleJsonPath)
+            peopleDF.printSchema()
+            peopleDF.createOrReplaceTempView("people")
+            val teenagerNamesDF = spark.sql("SELECT name FROM people WHERE age BETWEEN 13 AND 19")
+            teenagerNamesDF.show()
+
+            /**
+             * Alternatively, a DataFrame can be created for a JSON dataset
+             * represented by a Dataset[String] storing one JSON object per string
+             */
+            val otherPeopleDataset = spark.createDataset(
+                """{"name":"Yin","address":{"city":"Columbus","state":"Ohio"}}""" :: Nil)
+            val otherPeople = spark.read.json(otherPeopleDataset)
+            otherPeople.show()
+
+            // NOTE partitionBy and bucketBY
+            peopleDF.select("name", "age").write.format("parquet").save(tempPath + "/parquet.json")
+            peopleDF.write.bucketBy(42, "name")
+                .sortBy("age").saveAsTable("people_bucketed")
+        }
+
+        parquetTest()
+        orcTest()
+
+        // -------------------------------------------------------------------------------------------------------------
+
+        // NOTE Saving to Persistent Tables
+        /**
+         * DataFrames can also be saved as persistent tables into Hive metastore using the saveAsTable command.
+         * Notice that an existing Hive deployment is not necessary to use this feature.
+         * Spark will create a default local Hive metastore (using Derby) for you.
+         *
+         * Unlike the createOrReplaceTempView command, saveAsTable will materialize the contents of the DataFrame
+         * and create a pointer to the data in the Hive metastore.
+         *
+         * Persistent tables will still exist even after your Spark program has restarted,
+         * as long as you maintain your connection to the same metastore.
+         *
+         * A DataFrame for a persistent table can be created by calling
+         * the table method on a SparkSession with the name of the table.
+         *
+         * For file-based data source, e.g. text, parquet, json, etc.
+         * you can specify a custom table path via the path option,
+         * e.g. df.write.option("path", "/some/path").saveAsTable("t").
+         *
+         * When the table is dropped, the custom table path will not be removed and the table data is still there.
+         * NOTE 指的是内存中的表被 drop,后持久化的文件源不会被删除 ???
+         * If no custom table path is specified,
+         * Spark will write data to a default table path under the warehouse directory.
+         * When the table is dropped, the default table path will be removed too.
+         *
+         * Starting from Spark 2.1, persistent datasource tables have per-partition metadata stored in the Hive metastore.
+         * This brings several benefits:
+         *  1 - Since the metastore can return only necessary partitions for a query,
+         *      discovering all the partitions on the first query to the table is no longer needed.
+         *  2 - Hive DDLs such as ALTER TABLE PARTITION ... SET LOCATION
+         *      are now available for tables created with the Datasource API.
+         *
+         * Note that partition information is not gathered by default
+         * when creating external datasource tables (those with a path option).
+         * To sync the partition information in the metastore, you can invoke MSCK REPAIR TABLE.
+         */
 
         /**
          * DataFrame 分区 默认按字段顺序分区 (Cassandra 列式存储), 比如 先 gender 后 country
          * 读取的时候会抽取分区信息,返回 DataFrame 的表结构
          */
-        def jsonTest(){
-            // NOTE json
-            val peopleDF = spark.read.format("json").load(peopleJsonPath)
-            peopleDF.select("name", "age").write.format("parquet").save(tempPath + "/parquet.json")
-            peopleDF.write.bucketBy(42, "name")
-                .sortBy("age").saveAsTable("people_bucketed")
-        }
 
         def csvTest(): Unit ={
             // NOTE CSV
@@ -48,22 +246,6 @@ object DataSource {
                 .option("header", "true")
                 .load(peopleCsvPath )
         }
-
-        def orcTest(): Unit ={
-            // NOTE ORC
-            // For Parquet, there exists parquet.enable.dictionary 默认为true，
-            // 是否启用dictionary编码；默认大小与page.size相同，为1M。dictionary创建时会占用较多的内存。
-            val usersDF = spark.read.load(usersParquetPath)
-            usersDF.write.format("orc")
-                .option("orc.bloom.filter.columns", "favorite_color")
-                .option("orc.dictionary.key.threshold", "1.0")
-                .option("orc.column.encoding.direct", "name")
-                .save(tempPath +  "users_with_options.orc")
-        }
-
-        //  Notice that an existing Hive deployment is not necessary to use this feature
-        //  Spark will create a default local Hive metastore (using Derby) for you
-        //  persistent datasource tables have per-partition metadata stored in the Hive metastore
 
         // Setting hive.metastore.warehouse.dir ('null') to the value of spark.sql.warehouse.dir
         // Not allowing to set spark.sql.warehouse.dir or hive.metastore.warehouse.dir in SparkSession's options,
