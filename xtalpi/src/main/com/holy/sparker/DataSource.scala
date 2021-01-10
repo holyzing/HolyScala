@@ -9,7 +9,14 @@ object DataSource {
         val peopleCsvPath = SparkDataset.sparkHome + "/examples/src/main/resources/people.csv"
         val peopleJsonPath = SparkDataset.sparkHome +  "/examples/src/main/resources/people.json"
         val usersParquetPath = SparkDataset.sparkHome + "/examples/src/main/resources/users.parquet"
-        val spark = SparkSession.builder().appName("SparkDataSource").master("local[*]").getOrCreate()
+        val spark = SparkSession.builder()
+            // NOTE Not allowing to set spark.sql.warehouse.dir or hive.metastore.warehouse.dir
+            // NOTE in SparkSession's options, it should be set statically for cross-session usages
+            .config("spark.sql.warehouse.dir", tempPath + "/warehouse")
+            .appName("SparkDataSource").enableHiveSupport().master("local[*]").getOrCreate()
+
+        // NOTE Setting hive.metastore.warehouse.dir ('null') to the value of spark.sql.warehouse.dir
+        spark.sparkContext.hadoopConfiguration.addResource("hive-site.xml")
 
         // Encoders for most common types are automatically provided by importing spark.implicits._
         import spark.implicits._
@@ -23,7 +30,7 @@ object DataSource {
              * all columns are automatically converted to be nullable for compatibility reasons.
              */
             val peopleDF = spark.read.json(peopleJsonPath)
-            val peopleParquetPath = tempPath + "/people.parquet"
+            val peopleParquetPath = tempPath + "/people/people.parquet"
             // DataFrames can be saved as Parquet files, maintaining the schema information
             peopleDF.write.mode(SaveMode.Overwrite).parquet(peopleParquetPath)
 
@@ -36,7 +43,7 @@ object DataSource {
             val usersDF = spark.read.load(usersParquetPath)
             println(usersDF.columns.mkString("Array(", ", ", ")"))
             usersDF.select("name", "favorite_color").write.mode(
-                SaveMode.Ignore).save(tempPath + "/parquet.namesAndFavColors")
+                SaveMode.Ignore).save(tempPath + "/user/parquet.namesAndFavColors")
 
             // NOTE Partition Discovery
             /**
@@ -173,6 +180,12 @@ object DataSource {
             val teenagerNamesDF = spark.sql("SELECT name FROM people WHERE age BETWEEN 13 AND 19")
             teenagerNamesDF.show()
 
+            // NOTE partitionBy and bucketBY
+            peopleDF.select("name", "age").write.mode(SaveMode.Ignore)
+                .format("parquet").save(tempPath + "/people/parquet.json")
+            peopleDF.write.bucketBy(42, "name")
+                .sortBy("age").saveAsTable("people_bucketed")
+
             /**
              * Alternatively, a DataFrame can be created for a JSON dataset
              * represented by a Dataset[String] storing one JSON object per string
@@ -181,15 +194,82 @@ object DataSource {
                 """{"name":"Yin","address":{"city":"Columbus","state":"Ohio"}}""" :: Nil)
             val otherPeople = spark.read.json(otherPeopleDataset)
             otherPeople.show()
-
-            // NOTE partitionBy and bucketBY
-            peopleDF.select("name", "age").write.format("parquet").save(tempPath + "/parquet.json")
-            peopleDF.write.bucketBy(42, "name")
-                .sortBy("age").saveAsTable("people_bucketed")
         }
 
-        parquetTest()
-        orcTest()
+        case class Row(key: Int, value: String)
+        case class Record(key: Int, value: String)
+
+        def hiveTest(): Unit ={
+            /**
+             * When working with Hive, one must instantiate SparkSession with Hive support, including connectivity to a
+             * persistent Hive metastore, support for Hive serdes, and Hive user-defined functions.
+             * Users who do not have an existing Hive deployment can still enable Hive support.
+             * When not configured by the hive-site.xml, the context automatically creates metastore_db
+             * in the current directory and creates a directory configured by spark.sql.warehouse.dir, which defaults
+             * to the directory spark-warehouse in the current directory that the Spark application is started.
+             * Note that the hive.metastore.warehouse.dir property in hive-site.xml is deprecated since Spark 2.0.0.
+             * Instead, use spark.sql.warehouse.dir to specify the default location of database in warehouse.
+             * You may need to grant write privilege to the user who starts the Spark application.
+             *
+             * NOTE 当没有通过 hive-site.xml 连接到外部的hive，saprk中的配置是无效且不被允许的， 而hive中的配置是有效的，
+             * NOTE 相反的，当通过 hive-site.xml 连接到外部的 hive，则hive中的 配置失效，而spark中的配置生效。
+             *
+             * NOTE spark metastore_db(derby) 可通过 其实是不生效的
+             * NOTE spark.driver.extraJavaOptions -Dderby.system.home=/tmp/derby 在 spark-defaults.conf 中配置
+             */
+
+            spark.sql("CREATE TABLE IF NOT EXISTS src (key INT, value STRING) USING hive")
+            val loadDataSql = "LOAD DATA LOCAL INPATH '%s/examples/src/main/resources/kv1.txt' INTO TABLE src"
+                .format(SparkDataset.sparkHome)
+            println(SparkDataset.sparkHome)
+            spark.sql(loadDataSql)
+            // Queries are expressed in HiveQL
+            spark.sql("SELECT * FROM src").show()
+            spark.sql("SELECT COUNT(*) FROM src").show()
+
+            // The results of SQL queries are themselves DataFrames and support all normal functions.
+            val sqlDF = spark.sql("SELECT key, value FROM src WHERE key < 10 ORDER BY key")
+
+            // The items in DataFrames are of type Row, which allows you to access each column by ordinal.
+            val stringsDS = sqlDF.map {case Row(key: Int, value: String) => s"Key: $key, Value: $value"}
+            stringsDS.show()
+
+            // You can also use DataFrames to create temporary views within a SparkSession.
+            val recordsDF = spark.createDataFrame((1 to 100).map(i => Record(i, s"val_$i")))
+            recordsDF.createOrReplaceTempView("records")
+
+            // Queries can then join DataFrame data with data stored in Hive.
+            spark.sql("SELECT * FROM records r JOIN src s ON r.key = s.key").show()
+
+            // Create a Hive managed Parquet table, with HQL syntax instead of the Spark SQL native syntax
+            // `USING hive`
+            spark.sql("CREATE TABLE hive_records(key int, value string) STORED AS PARQUET")
+            // Save DataFrame to the Hive managed table
+            val df = spark.table("src")
+            df.write.mode(SaveMode.Overwrite).saveAsTable("hive_records")
+            // After insertion, the Hive managed table has data now
+            spark.sql("SELECT * FROM hive_records").show()
+
+            // Prepare a Parquet data directory
+            val dataDir = "/tmp/parquet_data"
+            spark.range(10).write.parquet(dataDir)
+            // Create a Hive external Parquet table
+            spark.sql(s"CREATE EXTERNAL TABLE hive_bigints(id bigint) STORED AS PARQUET LOCATION '$dataDir'")
+            // The Hive external table should already have data
+            spark.sql("SELECT * FROM hive_bigints").show()
+            // ... Order may vary, as spark processes the partitions in parallel.
+
+            // Turn on flag for Hive Dynamic Partitioning
+            spark.sqlContext.setConf("hive.exec.dynamic.partition", "true")
+            spark.sqlContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
+            // Create a Hive partitioned table using DataFrame API
+            df.write.partitionBy("key").format("hive").saveAsTable("hive_part_tbl")
+            // Partitioned column `key` will be moved to the end of the schema.
+            spark.sql("SELECT * FROM hive_part_tbl").show()
+
+        }
+
+        hiveTest()
 
         // -------------------------------------------------------------------------------------------------------------
 
@@ -247,10 +327,6 @@ object DataSource {
                 .load(peopleCsvPath )
         }
 
-        // Setting hive.metastore.warehouse.dir ('null') to the value of spark.sql.warehouse.dir
-        // Not allowing to set spark.sql.warehouse.dir or hive.metastore.warehouse.dir in SparkSession's options,
-        // it should be set statically for cross-session usages
-
         def partion(): Unit ={
             val usersDF = spark.sql("SELECT * FROM parquet.`"+ usersParquetPath +"`")
             // usersDF.write.mode(SaveMode.Ignore).save(tempPath + "/parquet.saveMode")
@@ -300,13 +376,9 @@ object DataSource {
                 .option("recursiveFileLookup", "true")
                 .load(SparkDataset.sparkHome + "examples/src/main/resources/dir1")
             recursiveLoadedDF.show()
-
-            /**
-             * spark 设置 metastore_db(derby) 可通过 spark.driver.extraJavaOptions -Dderby.system.home=/tmp/derby 配置位置
-             */
         }
+
+        spark.stop()
     }
-
-
 
 }

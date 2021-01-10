@@ -14,10 +14,11 @@ object SparkDataset {
         sparkHome = "/home/holyzing/snap/apache/spark-3.0.1-bin-hadoop2.7"
         workHome = "/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi"
     } else {
-        sparkHome = "F:/apache/spark-3.0.1-bin-hadoop2.7"
+        sparkHome = "F:/apache/spark-3.0.1-bin-hadoop2.7/test"
         workHome = "F:/mywork/Scala/xtalpi"
     }
-    sparkHome = sys.env.getOrElse("SPARK_HOME", sparkHome)
+    sparkHome = sys.env.getOrElse("SPARK_HOME", sparkHome)  // windows 下是生效的
+    sparkHome = sparkHome.replace("\\", "/")
 
     def main(args: Array[String]): Unit = {
         datasetApi()
