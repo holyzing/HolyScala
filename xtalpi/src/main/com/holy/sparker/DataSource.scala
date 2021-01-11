@@ -1,6 +1,9 @@
 package com.holy.sparker
 
-import org.apache.spark.sql.{SaveMode, SparkSession}
+import org.apache.spark.sql.{Row, SaveMode, SparkSession}
+
+// THINK case class 必须定义在类的外部 ????
+case class Record(key: Int, value: String)
 
 object DataSource {
     def main(args: Array[String]): Unit = {
@@ -9,11 +12,11 @@ object DataSource {
         val peopleCsvPath = SparkDataset.sparkHome + "/examples/src/main/resources/people.csv"
         val peopleJsonPath = SparkDataset.sparkHome +  "/examples/src/main/resources/people.json"
         val usersParquetPath = SparkDataset.sparkHome + "/examples/src/main/resources/users.parquet"
-        val spark = SparkSession.builder()
+        val spark = SparkSession.builder().appName("SparkDataSource")
             // NOTE Not allowing to set spark.sql.warehouse.dir or hive.metastore.warehouse.dir
             // NOTE in SparkSession's options, it should be set statically for cross-session usages
             .config("spark.sql.warehouse.dir", tempPath + "/warehouse")
-            .appName("SparkDataSource").enableHiveSupport().master("local[*]").getOrCreate()
+            .enableHiveSupport().master("local[*]").getOrCreate()
 
         // NOTE Setting hive.metastore.warehouse.dir ('null') to the value of spark.sql.warehouse.dir
         spark.sparkContext.hadoopConfiguration.addResource("hive-site.xml")
@@ -196,9 +199,6 @@ object DataSource {
             otherPeople.show()
         }
 
-        case class Row(key: Int, value: String)
-        case class Record(key: Int, value: String)
-
         def hiveTest(): Unit ={
             /**
              * When working with Hive, one must instantiate SparkSession with Hive support, including connectivity to a
@@ -214,11 +214,13 @@ object DataSource {
              * NOTE 当没有通过 hive-site.xml 连接到外部的hive，saprk中的配置是无效且不被允许的， 而hive中的配置是有效的，
              * NOTE 相反的，当通过 hive-site.xml 连接到外部的 hive，则hive中的 配置失效，而spark中的配置生效。
              *
-             * NOTE spark metastore_db(derby) 可通过 其实是不生效的
-             * NOTE spark.driver.extraJavaOptions -Dderby.system.home=/tmp/derby 在 spark-defaults.conf 中配置
+             * NOTE spark metastore_db(derby)
+             * NOTE spark.driver.extraJavaOptions -Dderby.system.home=/tmp/derby
+             * LATER 配置不生效 ?????????
              */
 
             spark.sql("CREATE TABLE IF NOT EXISTS src (key INT, value STRING) USING hive")
+            // 怎么加载的,如何确定分隔符的 ?
             val loadDataSql = "LOAD DATA LOCAL INPATH '%s/examples/src/main/resources/kv1.txt' INTO TABLE src"
                 .format(SparkDataset.sparkHome)
             println(SparkDataset.sparkHome)
@@ -231,7 +233,9 @@ object DataSource {
             val sqlDF = spark.sql("SELECT key, value FROM src WHERE key < 10 ORDER BY key")
 
             // The items in DataFrames are of type Row, which allows you to access each column by ordinal.
-            val stringsDS = sqlDF.map {case Row(key: Int, value: String) => s"Key: $key, Value: $value"}
+            val stringsDS = sqlDF.map{
+                case Row(key: Int, value: String) => s"Key: $key, Value: $value"
+            }
             stringsDS.show()
 
             // You can also use DataFrames to create temporary views within a SparkSession.
