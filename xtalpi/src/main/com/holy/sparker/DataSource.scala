@@ -219,29 +219,27 @@ object DataSource {
              * LATER 配置不生效 ?????????
              */
 
+            /*
             spark.sql("CREATE TABLE IF NOT EXISTS src (key INT, value STRING) USING hive")
-            // 怎么加载的,如何确定分隔符的 ?
+            // NOTE load 会拷贝源文件到warehouse，并存储其 schema 信息, 如果同名文件存在，则按顺讯编号存储
             val loadDataSql = "LOAD DATA LOCAL INPATH '%s/examples/src/main/resources/kv1.txt' INTO TABLE src"
                 .format(SparkDataset.sparkHome)
-            println(SparkDataset.sparkHome)
-            spark.sql(loadDataSql)
+            println(loadDataSql)
+            spark.sql(s"LOAD DATA LOCAL INPATH '${SparkDataset.sparkHome}" +
+                "/examples/src/main/resources/kv1.txt' INTO TABLE src")
             // Queries are expressed in HiveQL
             spark.sql("SELECT * FROM src").show()
             spark.sql("SELECT COUNT(*) FROM src").show()
 
             // The results of SQL queries are themselves DataFrames and support all normal functions.
             val sqlDF = spark.sql("SELECT key, value FROM src WHERE key < 10 ORDER BY key")
-
             // The items in DataFrames are of type Row, which allows you to access each column by ordinal.
-            val stringsDS = sqlDF.map{
-                case Row(key: Int, value: String) => s"Key: $key, Value: $value"
-            }
+            val stringsDS = sqlDF.map{case Row(key: Int, value: String) => s"Key: $key, Value: $value"}
             stringsDS.show()
 
             // You can also use DataFrames to create temporary views within a SparkSession.
             val recordsDF = spark.createDataFrame((1 to 100).map(i => Record(i, s"val_$i")))
             recordsDF.createOrReplaceTempView("records")
-
             // Queries can then join DataFrame data with data stored in Hive.
             spark.sql("SELECT * FROM records r JOIN src s ON r.key = s.key").show()
 
@@ -253,9 +251,10 @@ object DataSource {
             df.write.mode(SaveMode.Overwrite).saveAsTable("hive_records")
             // After insertion, the Hive managed table has data now
             spark.sql("SELECT * FROM hive_records").show()
+            */
 
             // Prepare a Parquet data directory
-            val dataDir = "/tmp/parquet_data"
+            val dataDir = tempPath +  "/parquet_data"
             spark.range(10).write.parquet(dataDir)
             // Create a Hive external Parquet table
             spark.sql(s"CREATE EXTERNAL TABLE hive_bigints(id bigint) STORED AS PARQUET LOCATION '$dataDir'")
@@ -267,10 +266,12 @@ object DataSource {
             spark.sqlContext.setConf("hive.exec.dynamic.partition", "true")
             spark.sqlContext.setConf("hive.exec.dynamic.partition.mode", "nonstrict")
             // Create a Hive partitioned table using DataFrame API
-            df.write.partitionBy("key").format("hive").saveAsTable("hive_part_tbl")
+            spark.table("src").write.partitionBy("key")
+                .format("hive").saveAsTable("hive_part_tbl")
             // Partitioned column `key` will be moved to the end of the schema.
             spark.sql("SELECT * FROM hive_part_tbl").show()
-
+            // TODO 按 key 分区存储为什么只有 309 个， 最小的key 是 0 最大的key是 498，
+            // TODO 简单做一下做一下验证。然后使用mapreduce 做一下验证
         }
 
         hiveTest()
