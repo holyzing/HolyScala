@@ -11,3 +11,5 @@ core-site.xml
 hdfs-site.xml
 /.metadata/
 spark-warehouse/
+metastore_db/
+
