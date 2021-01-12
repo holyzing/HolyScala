@@ -54,7 +54,7 @@ object Clause {
         }
         println("--------------------------------------------")  // idea 类型检查这么强大 ？
         var retVal = for { a <- List(1, 2, 3); if a != 3; if a < 2 } yield a
-        println(retVal, retVal.getClass, retVal.getClass())
+        println(retVal, retVal.getClass, retVal.getClass)
         for (i <- retVal){
             println(i)
         }

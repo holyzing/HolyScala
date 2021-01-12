@@ -1,5 +1,6 @@
 package com.holy.sparker
 
+import org.apache.spark.sql.catalyst.dsl.plans.table
 import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 
 // THINK case class 必须定义在类的外部 ????
@@ -219,7 +220,11 @@ object DataSource {
              * LATER 配置不生效 ?????????
              */
 
+            // NOTE spark.sql("MSCK REPAIR TABLE src")
+            // NOTE 修复已经存在的表的信息(分区信息等),对新增分区可以更新,但是对删除分区则无法更新
+
             /*
+            // THINK 为什么 在 Linux 下 if not exists 不生效 ??? 因为 metastore_db 中没有src 这个表信息
             spark.sql("CREATE TABLE IF NOT EXISTS src (key INT, value STRING) USING hive")
             // NOTE load 会拷贝源文件到warehouse，并存储其 schema 信息, 如果同名文件存在，则按顺讯编号存储
             val loadDataSql = "LOAD DATA LOCAL INPATH '%s/examples/src/main/resources/kv1.txt' INTO TABLE src"
@@ -251,7 +256,6 @@ object DataSource {
             df.write.mode(SaveMode.Overwrite).saveAsTable("hive_records")
             // After insertion, the Hive managed table has data now
             spark.sql("SELECT * FROM hive_records").show()
-            */
 
             // Prepare a Parquet data directory
             val dataDir = tempPath +  "/parquet_data"
@@ -270,8 +274,34 @@ object DataSource {
                 .format("hive").saveAsTable("hive_part_tbl")
             // Partitioned column `key` will be moved to the end of the schema.
             spark.sql("SELECT * FROM hive_part_tbl").show()
-            // TODO 按 key 分区存储为什么只有 309 个， 最小的key 是 0 最大的key是 498，
-            // TODO 简单做一下做一下验证。然后使用mapreduce 做一下验证
+             */
+            // spark.sql("select count(*) from hive_part_tbl").show()
+            // spark.sql("select max(key), min(key) from hive_part_tbl").show()
+            // spark.table("show partitions hive_part_tbl")
+
+            val hptDf = spark.table("hive_part_tbl")
+            println(hptDf.rdd.getNumPartitions)
+            // 注意在 集群内 foreach 进行打印是不正确的,需要 collect 到 driver 之后去打印
+
+            var count = 0
+            var sum_ = 0
+            for (part <- hptDf.rdd.glom().collect()){
+                if (part.length > 1){
+                    count += 1
+                    sum_ += part.length
+                }
+            }
+            // 500 条数据, 按 key 分区存储 有 309 个分区， 最小的key 是 0 最大的key是 498，
+            // 136 个元素个数大于1的分区, 元素总个数是 327
+            // 309 - 136 = 173, 173 + 327 = 500
+
+            println(count, sum_)
+            // hptDf.foreachPartition( (iter: Iterator[Row]) => {
+            //    if (iter.length > 1){
+            //        println(iter.toString(), iter.length)
+            //    }
+            // })
+
         }
 
         hiveTest()
