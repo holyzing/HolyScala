@@ -1,7 +1,10 @@
 package com.holy.sparker
 
-import org.apache.spark.sql.catalyst.dsl.plans.table
+import org.apache.spark.TaskContext
+import org.apache.spark.TaskContext.getPartitionId
 import org.apache.spark.sql.{Row, SaveMode, SparkSession}
+
+import scala.Console.in
 
 // THINK case class 必须定义在类的外部 ????
 case class Record(key: Int, value: String)
@@ -200,7 +203,55 @@ object DataSource {
             otherPeople.show()
         }
 
+        def csvTest(): Unit ={
+            // NOTE CSV
+            // val df = spark.read.option("header","true").option("inferSchema","true").csv(hdfsPath)
+            // df.show()
+            // df.write.option("header","true").mode("overwrite").csv("hdfs://10.111.32.184:8020/user/dp/demo")
+            val peopleDFCsv = spark.read.format("csv")
+                .option("sep", ";")
+                .option("inferSchema", "true")
+                .option("header", "true")
+                .load(peopleCsvPath )
+        }
+
         def hiveTest(): Unit ={
+            // NOTE Saving to Persistent Tables
+            /**
+             * DataFrames can also be saved as persistent tables into Hive metastore using the saveAsTable command.
+             * Notice that an existing Hive deployment is not necessary to use this feature.
+             * Spark will create a default local Hive metastore (using Derby) for you.
+             *
+             * Unlike the createOrReplaceTempView command, saveAsTable will materialize the contents of the DataFrame
+             * and create a pointer to the data in the Hive metastore.
+             *
+             * Persistent tables will still exist even after your Spark program has restarted,
+             * as long as you maintain your connection to the same metastore.
+             *
+             * A DataFrame for a persistent table can be created by calling
+             * the table method on a SparkSession with the name of the table.
+             *
+             * For file-based data source, e.g. text, parquet, json, etc.
+             * you can specify a custom table path via the path option,
+             * e.g. df.write.option("path", "/some/path").saveAsTable("t").
+             * When the table is dropped, the custom table path will not be removed and the table data is still there.
+             *
+             * If no custom table path is specified,
+             * Spark will write data to a default table path under the warehouse directory.
+             * When the table is dropped, the default table path will be removed too.
+             *
+             * Starting from Spark 2.1, persistent datasource tables have per-partition metadata stored in the Hive metastore.
+             * This brings several benefits:
+             *  1 - Since the metastore can return only necessary partitions for a query,
+             *      discovering all the partitions on the first query to the table is no longer needed.
+             *  2 - Hive DDLs such as ALTER TABLE PARTITION ... SET LOCATION
+             *      are now available for tables created with the Datasource API.
+             *
+             * Note that partition information is not gathered by default
+             * when creating external datasource tables (those with a path option).
+             * To sync the partition information in the metastore, you can invoke MSCK REPAIR TABLE.
+             */
+
             /**
              * When working with Hive, one must instantiate SparkSession with Hive support, including connectivity to a
              * persistent Hive metastore, support for Hive serdes, and Hive user-defined functions.
@@ -223,8 +274,8 @@ object DataSource {
             // NOTE spark.sql("MSCK REPAIR TABLE src")
             // NOTE 修复已经存在的表的信息(分区信息等),对新增分区可以更新,但是对删除分区则无法更新
 
-            /*
             // THINK 为什么 在 Linux 下 if not exists 不生效 ??? 因为 metastore_db 中没有src 这个表信息
+            // THINK 但是在 warehouse 中是有这个目录的。
             spark.sql("CREATE TABLE IF NOT EXISTS src (key INT, value STRING) USING hive")
             // NOTE load 会拷贝源文件到warehouse，并存储其 schema 信息, 如果同名文件存在，则按顺讯编号存储
             val loadDataSql = "LOAD DATA LOCAL INPATH '%s/examples/src/main/resources/kv1.txt' INTO TABLE src"
@@ -274,7 +325,7 @@ object DataSource {
                 .format("hive").saveAsTable("hive_part_tbl")
             // Partitioned column `key` will be moved to the end of the schema.
             spark.sql("SELECT * FROM hive_part_tbl").show()
-             */
+
             // spark.sql("select count(*) from hive_part_tbl").show()
             // spark.sql("select max(key), min(key) from hive_part_tbl").show()
             // spark.table("show partitions hive_part_tbl")
@@ -301,92 +352,41 @@ object DataSource {
             //        println(iter.toString(), iter.length)
             //    }
             // })
+            println(TaskContext.getPartitionId(), TaskContext.get().partitionId())
 
+            // NOTE Specifying storage format for Hive tables
+
+            // NOTE Interacting with Different Versions of Hive Metastore
         }
-
-        hiveTest()
 
         // -------------------------------------------------------------------------------------------------------------
 
-        // NOTE Saving to Persistent Tables
-        /**
-         * DataFrames can also be saved as persistent tables into Hive metastore using the saveAsTable command.
-         * Notice that an existing Hive deployment is not necessary to use this feature.
-         * Spark will create a default local Hive metastore (using Derby) for you.
-         *
-         * Unlike the createOrReplaceTempView command, saveAsTable will materialize the contents of the DataFrame
-         * and create a pointer to the data in the Hive metastore.
-         *
-         * Persistent tables will still exist even after your Spark program has restarted,
-         * as long as you maintain your connection to the same metastore.
-         *
-         * A DataFrame for a persistent table can be created by calling
-         * the table method on a SparkSession with the name of the table.
-         *
-         * For file-based data source, e.g. text, parquet, json, etc.
-         * you can specify a custom table path via the path option,
-         * e.g. df.write.option("path", "/some/path").saveAsTable("t").
-         *
-         * When the table is dropped, the custom table path will not be removed and the table data is still there.
-         * NOTE 指的是内存中的表被 drop,后持久化的文件源不会被删除 ???
-         * If no custom table path is specified,
-         * Spark will write data to a default table path under the warehouse directory.
-         * When the table is dropped, the default table path will be removed too.
-         *
-         * Starting from Spark 2.1, persistent datasource tables have per-partition metadata stored in the Hive metastore.
-         * This brings several benefits:
-         *  1 - Since the metastore can return only necessary partitions for a query,
-         *      discovering all the partitions on the first query to the table is no longer needed.
-         *  2 - Hive DDLs such as ALTER TABLE PARTITION ... SET LOCATION
-         *      are now available for tables created with the Datasource API.
-         *
-         * Note that partition information is not gathered by default
-         * when creating external datasource tables (those with a path option).
-         * To sync the partition information in the metastore, you can invoke MSCK REPAIR TABLE.
-         */
-
-        /**
-         * DataFrame 分区 默认按字段顺序分区 (Cassandra 列式存储), 比如 先 gender 后 country
-         * 读取的时候会抽取分区信息,返回 DataFrame 的表结构
-         */
-
-        def csvTest(): Unit ={
-            // NOTE CSV
-            // val df = spark.read.option("header","true").option("inferSchema","true").csv(hdfsPath)
-            // df.show()
-            // df.write.option("header","true").mode("overwrite").csv("hdfs://10.111.32.184:8020/user/dp/demo")
-            val peopleDFCsv = spark.read.format("csv")
-                .option("sep", ";")
-                .option("inferSchema", "true")
-                .option("header", "true")
-                .load(peopleCsvPath )
-        }
-
         def partion(): Unit ={
+            /**
+             * DataFrame 分区 默认按字段顺序分区 (Cassandra 列式存储), 比如 先 gender 后 country
+             * 读取的时候会抽取分区信息,返回 DataFrame 的表结构
+             * data 按 column 分区后,会为每一个分区持久化元信息,这为更多 类 SQL 的 DDL 操作 成为现实
+             */
             val usersDF = spark.sql("SELECT * FROM parquet.`"+ usersParquetPath +"`")
-            // usersDF.write.mode(SaveMode.Ignore).save(tempPath + "/parquet.saveMode")
 
-            usersDF.foreach(x => println(x))
-            // [Alyssa,null,WrappedArray(3, 9, 15, 20)] [Ben,red,WrappedArray()]
-
-            // usersDF.write.mode("overwrite").partitionBy("favorite_color")
-            //     .format("parquet").save(tempPath + "/namesPartByColor.parquet")
-
-            //  data 按column 分区后,会为每一个分区持久化元信息,这为更多 类 SQL 的 DDL 操作 成为现实
+            usersDF.write.mode("overwrite").partitionBy("favorite_color")
+                 .format("parquet").save(tempPath + "/namesPartByColor.parquet")
 
             // It is possible to use both partitioning and bucketing for a single table:
             usersDF.write.partitionBy("favorite_color")
                 .bucketBy(42, "name").saveAsTable("users_partitioned_bucketed")
-            // partitionBy creates a directory structure as described in the Partition Discovery section.
-            // Thus, it has limited applicability to columns with high cardinality.
-            // In contrast bucketBy distributes data across a fixed number of buckets
-            // and can be used when the number of unique values is unbounded.
+
+            /*
+            partitionBy creates a directory structure as described in the Partition Discovery section.
+            Thus, it has limited applicability to columns with high cardinality.
+            In contrast bucketBy distributes data across a fixed number of buckets
+            and can be used when the number of unique values is unbounded.
+             */
+            // ETL 经过抽取（extract）、转换（transform）、加载（load）
         }
 
-        // ETL 经过抽取（extract）、转换（transform）、加载（load）
-
-        // options | configurations: parquet, orc, avro, json, csv, tex
         def genericFileDataResourceOption(): Unit ={
+            // options | configurations: parquet, orc, avro, json, csv, tex
             // dir1/file3.json is corrupt from parquet's view
             spark.sql("set spark.sql.files.ignoreCorruptFiles=true")
             // after Construct the Dataframe, read the missing file
