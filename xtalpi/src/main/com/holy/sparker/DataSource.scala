@@ -1,5 +1,6 @@
 package com.holy.sparker
 
+import javax.print.attribute.standard.MediaSize.Other
 import org.apache.spark.TaskContext
 import org.apache.spark.TaskContext.getPartitionId
 import org.apache.spark.sql.{Row, SaveMode, SparkSession}
@@ -359,7 +360,14 @@ object DataSource {
             // NOTE Interacting with Different Versions of Hive Metastore
         }
 
+        def jdbcToOtherDatabases(): Unit = {
+
+        }
         // -------------------------------------------------------------------------------------------------------------
+
+        def apacheAvroDataTest(): Unit = {
+
+        }
 
         def partion(): Unit ={
             /**
@@ -415,5 +423,4 @@ object DataSource {
 
         spark.stop()
     }
-
 }
