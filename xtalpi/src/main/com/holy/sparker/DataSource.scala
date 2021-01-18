@@ -424,3 +424,7 @@ object DataSource {
         spark.stop()
     }
 }
+
+class DataSource {
+
+}

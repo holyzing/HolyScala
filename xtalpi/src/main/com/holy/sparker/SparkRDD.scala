@@ -486,6 +486,4 @@ class SparkRDD {
         rdd.foreach(x => println(x))  // 当访问内容的时候 RDD 才会去加载数据
         rdd.saveAsTextFile(hdfsPath + hdfsHome + "output")
     }
-
-
 }

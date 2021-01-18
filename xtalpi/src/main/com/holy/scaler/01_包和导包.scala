@@ -1,6 +1,6 @@
 package com.holy.scaler
 
-/*×
+/**
 Scala 特性
   面向对象特性
     Scala是一种纯面向对象的语言，每个值都是对象。对象的数据类型以及行为由类和特质描述。
@@ -41,14 +41,18 @@ Scala 特性
 
   符号标志符: + ++ ::: < ?>
             :-> $colon$minus$greater 【scala 的内部名称】
-* */
+
+ Java 是一个面向对象的语言
+ 而 Scala 是一个完全面向对象的语言 所以 scala的语言中没有： 基本类型 static null
+ 但是 scalac 最终会将其编码成 JVM 支持的非面向对象的字节码
+
+*/
 
 // import的效果从开始延伸到语句块的结束
 // 默认情况下，Scala 总会引入 java.lang._ 、 scala._ 和 Predef._
 
 
-import java.lang._
-import java.awt.{Window, event}
+import java.awt.{FlowLayout, Window}
 
 package innerpackage{
   object packageTest{
@@ -63,19 +67,22 @@ class JavaClass {
   def val_var(args: Array[String]): Unit = {
     val a, b = 10  // 声明不可变变量
     var c, d = 5   // 声明可变变量
+    c = c + 5
+    d = c + d
     val content: String = "hello world"
-    println(args, content)
+    println(args.mkString("Array(", ", ", ")"), content)
     println(a, b, c, d)
   }
 
-  def handler(evt: event.ActionEvent): Unit = {
+  def handler(window: Window): Unit = {
 
     import java.util.{HashMap => JavaHashMap}
     // scala 中不支持 java 语法，但是支持调用 java 对象和方法，所以说使用 java的 <> 进行泛型，是错误的
     // JavaHashMap jhm = new JavaHashMap<String, String>() 错误的语法
     val jhm: JavaHashMap[String, String] = new JavaHashMap[String, String]()
+    jhm.put("k1", "v1")
     import java.awt.{Window => _, Color, Font}  // _：隐藏成员
-    println(Color.BLACK)
+    println(Color.BLACK, window.getName, FlowLayout.LEFT)
     System.out.println(Font.BOLD)
   }
 
@@ -88,10 +95,10 @@ object _01_HelloWorld extends JavaClass {
   override def main(args: Array[String]): Unit = {
     val u: Unit = ()     // Unit 类型唯一的值 是 ()
     val u1: Unit = 2
-    val u2 = ()
+    val u2: Unit = ()
     val s1: String = "给"
-    println(u, u1, u2)
-    println(u.getClass(), u1.getClass(), u2.getClass())
+    println(u, u1, u2, s1)
+    println(u.getClass, u1.getClass, u2.getClass)
     println(test1())
   }
 
