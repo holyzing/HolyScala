@@ -41,11 +41,6 @@ Scala 特性
 
   符号标志符: + ++ ::: < ?>
             :-> $colon$minus$greater 【scala 的内部名称】
-
- Java 是一个面向对象的语言
- 而 Scala 是一个完全面向对象的语言 所以 scala的语言中没有： 基本类型 static null
- 但是 scalac 最终会将其编码成 JVM 支持的非面向对象的字节码
-
 */
 
 // import的效果从开始延伸到语句块的结束
