@@ -29,6 +29,10 @@ object ScalaSign {
         val s: List[Char] = l.flatMap(a => String.valueOf(a))
         val ss: List[String] = l.map(_.toString)
         println(l, c, s, ss)
+
+        val words1 = bigArr.map((_, 1))
+        val words2 = bigArr.map(x => (x, 1))
+
     }
 }
 
