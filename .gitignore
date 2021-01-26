@@ -12,4 +12,5 @@ hdfs-site.xml
 /.metadata/
 spark-warehouse/
 metastore_db/
+xtalpi/src/resources/
 
