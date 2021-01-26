@@ -22,6 +22,17 @@ object MyString{
     def main(args: Array[String]): Unit = {
         println("main is running !")
     }
+
+    def probelms(): Unit = {
+        val str: String = "大声道撒大所大所"
+        val sizeText = str.size     // immutable 使用 length mutable 使用 size
+        val lengthText = str.length // str.length() 是一样的
+        println(sizeText.getClass, sizeText, lengthText.getClass, lengthText)
+
+        /*
+         * JAVA 中 length 是 数组的属性 length() 是字符串的方法, size() 是集合的方法
+         */
+    }
 }
 
 // ctrl (shift) +/-

@@ -43,6 +43,12 @@
             <artifactId>junit</artifactId>
             <version>4.11</version>
         </dependency>
+
+        <dependency>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>spark-streaming-kafka-0-10_2.12</artifactId>
+            <version>3.0.1</version>
+        </dependency>
 <!--
     完全可以将本地spark 的安装目录和hadoop目录作为classpath加入到当前工作目录,而用 spark-shell则会自动 将sparkhome下的jar加入
     spark连接hadoop 应该不需要每个 spark 节点安装 Hadoop

@@ -10,7 +10,7 @@ import scala.Console.in
 // THINK case class 必须定义在类的外部 ????
 case class Record(key: Int, value: String)
 
-object DataSource {
+object SparkSql {
     def main(args: Array[String]): Unit = {
 
         val tempPath = SparkDataset.workHome + "/tmp"
@@ -378,7 +378,7 @@ object DataSource {
             val usersDF = spark.sql("SELECT * FROM parquet.`"+ usersParquetPath +"`")
 
             usersDF.write.mode("overwrite").partitionBy("favorite_color")
-                 .format("parquet").save(tempPath + "/namesPartByColor.parquet")
+                .format("parquet").save(tempPath + "/namesPartByColor.parquet")
 
             // It is possible to use both partitioning and bucketing for a single table:
             usersDF.write.partitionBy("favorite_color")
@@ -425,6 +425,6 @@ object DataSource {
     }
 }
 
-class DataSource {
+class SparkSql {
 
 }
