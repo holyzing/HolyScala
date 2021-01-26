@@ -1,11 +1,8 @@
 package com.holy.sparker
 
-import javax.print.attribute.standard.MediaSize.Other
 import org.apache.spark.TaskContext
-import org.apache.spark.TaskContext.getPartitionId
 import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 
-import scala.Console.in
 
 // THINK case class 必须定义在类的外部 ????
 case class Record(key: Int, value: String)
@@ -13,10 +10,10 @@ case class Record(key: Int, value: String)
 object SparkSql {
     def main(args: Array[String]): Unit = {
 
-        val tempPath = SparkDataset.workHome + "/tmp"
-        val peopleCsvPath = SparkDataset.sparkHome + "/examples/src/main/resources/people.csv"
-        val peopleJsonPath = SparkDataset.sparkHome +  "/examples/src/main/resources/people.json"
-        val usersParquetPath = SparkDataset.sparkHome + "/examples/src/main/resources/users.parquet"
+        val tempPath = HadoopUtils.workHome + "/tmp"
+        val peopleCsvPath = HadoopUtils.sparkHome + "/examples/src/main/resources/people.csv"
+        val peopleJsonPath = HadoopUtils.sparkHome +  "/examples/src/main/resources/people.json"
+        val usersParquetPath = HadoopUtils.sparkHome + "/examples/src/main/resources/users.parquet"
         val spark = SparkSession.builder().appName("SparkDataSource")
             // NOTE Not allowing to set spark.sql.warehouse.dir or hive.metastore.warehouse.dir
             // NOTE in SparkSession's options, it should be set statically for cross-session usages
@@ -280,9 +277,9 @@ object SparkSql {
             spark.sql("CREATE TABLE IF NOT EXISTS src (key INT, value STRING) USING hive")
             // NOTE load 会拷贝源文件到warehouse，并存储其 schema 信息, 如果同名文件存在，则按顺讯编号存储
             val loadDataSql = "LOAD DATA LOCAL INPATH '%s/examples/src/main/resources/kv1.txt' INTO TABLE src"
-                .format(SparkDataset.sparkHome)
+                .format(HadoopUtils.sparkHome)
             println(loadDataSql)
-            spark.sql(s"LOAD DATA LOCAL INPATH '${SparkDataset.sparkHome}" +
+            spark.sql(s"LOAD DATA LOCAL INPATH '${HadoopUtils.sparkHome}" +
                 "/examples/src/main/resources/kv1.txt' INTO TABLE src")
             // Queries are expressed in HiveQL
             spark.sql("SELECT * FROM src").show()
@@ -401,15 +398,15 @@ object SparkSql {
             spark.sql("set spark.sql.files.ignoreMissingFiles=true")
 
             val testCorruptDF = spark.read.parquet(
-                SparkDataset.sparkHome + "examples/src/main/resources/dir1/",
-                SparkDataset.sparkHome + "examples/src/main/resources/dir1/dir2/")
+                HadoopUtils.sparkHome + "examples/src/main/resources/dir1/",
+                HadoopUtils.sparkHome + "examples/src/main/resources/dir1/dir2/")
             testCorruptDF.show()
 
             //  The syntax follows org.apache.hadoop.fs.GlobFilter.
             //  It does not change the behavior of partition discovery
             val testGlobFilterDF = spark.read.format("parquet")
                 .option("pathGlobFilter", "*.parquet") // json file should be filtered out
-                .load(SparkDataset.sparkHome + "examples/src/main/resources/dir1")
+                .load(HadoopUtils.sparkHome + "examples/src/main/resources/dir1")
             testGlobFilterDF.show()
 
             // it disables partition inferring.
@@ -417,7 +414,7 @@ object SparkSql {
             // exception will be thrown
             val recursiveLoadedDF = spark.read.format("parquet")
                 .option("recursiveFileLookup", "true")
-                .load(SparkDataset.sparkHome + "examples/src/main/resources/dir1")
+                .load(HadoopUtils.sparkHome + "examples/src/main/resources/dir1")
             recursiveLoadedDF.show()
         }
 
