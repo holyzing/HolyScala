@@ -1,5 +1,7 @@
 package com.holy.sparker
 
+import com.holy.sparker.HadoopUtils.keytabPath
+import org.apache.spark
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.util.AccumulatorV2
 import org.apache.spark.{SparkConf, SparkContext}
@@ -57,16 +59,6 @@ class VectorAccumulatorV2 extends AccumulatorV2[MyVector, MyVector]{
 
 
 object SparkRDD {
-
-    var filePath: String = ""
-    val os: String = System.getProperty("os.name")
-
-    if (os != null && os.toLowerCase().indexOf("linux")> -1){
-        filePath = "/home/holyzing/Desktop/marvin-prod-20201125.db"
-    } else {
-        filePath = "C:\\Users\\holyz\\Desktop\\spark-test\\player.py"
-    }
-
     def main(args: Array[String]): Unit = {
         datasetApi()
         // rddApi()
@@ -76,7 +68,7 @@ object SparkRDD {
         val spark = SparkSession.builder().appName("SparkDatasetApi").master("local[*]").getOrCreate()
         spark.sparkContext.setLogLevel("WARN")
         import spark.implicits._
-        val textFile = spark.read.textFile(SparkRDD.filePath)
+        val textFile = spark.read.textFile(HadoopUtils.workHome + "/tmp/test.txt")
 
         def base(): Unit = {
             println(textFile, textFile.getClass) // class org.apache.spark.sql.Dataset
@@ -169,8 +161,8 @@ object SparkRDD {
         conf.setAppName("SparRDDApi")
         val sc = new SparkContext(conf)
         sc.setLogLevel("warn")
-        // 分区数不能小于 block 数, 默认一个block一个分区4
-        val textFile = sc.textFile(filePath, 4) // RDD[String]
+        // 分区数不能小于 block 数, 默认一个block一个分区4  // RDD[String]
+        val textFile = sc.textFile(HadoopUtils.workHome + "/tmp/test.txt", 4)
         println(textFile, textFile.getClass)  // org.apache.spark.rdd.MapPartitionsRDD
         // val insertCount = textFile.filter(line => line.contains("insert")).count()  // 使用了泛型
         // textFile.map(line =>  line.split("").length)
@@ -409,9 +401,22 @@ class SparkRDD {
     @Test
     def sparkHadoopFirstStep(): Unit = {
         val master = "local[*]"  // spark://spark-master:7077
-        val targetPath = "/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi/target/holy-0.0.1-SNAPSHOT.jar"
+        val targetPath = HadoopUtils.workHome + "/target/holy-0.0.1-SNAPSHOT.jar"
         val conf = new SparkConf().setJars(Array[String](targetPath))
 
+        /*
+        conf.set("spark.submit.deployMode", "client")
+            .set("spark.driver.memory", "1g")
+            .set("spark.executor.memory", "1g")
+            .set("spark.default.parallelism", "8")
+            .set("spark.cores.max", "4")
+            .set("spark.executor.cores", "2")
+        conf.setAppName("FisrtStep")
+        conf.setMaster(master)
+        val sc = new SparkContext(conf)
+         */
+        // TODO spark 默认会加载 classpath 路径下的 hadoop配置文件，name是在哪里出发加载的呢 ？
+        println(System.getenv("SPARK_USER"))
         val spark = SparkSession.builder()
             .config(conf)
             .config("spark.submit.deployMode", "client")
@@ -420,16 +425,17 @@ class SparkRDD {
             .config("spark.driver.memory", "1g")
             .config("spark.executor.memory", "1g")
             .config("spark.default.parallelism", "8")
+            // .config("spark.driver.extraClassPath", "/home/holyzing/snap/apache/hadoop-2.7.7/etc/")
+            // .config("spark.yarn.principal", "houleilei@XTALPI-BJ.COM")
+            // .config("spark.security.credentials.hive.enabled", "false")
+            // .config("spark.security.credentials.hbase.enabled", "false")
+            // .config("spark.yarn.keytab", keytabPath)
             .appName("FisrtStep")
             .master(master).getOrCreate()
-        // .config("spark.driver.extraClassPath", "/home/holyzing/snap/apache/hadoop-2.7.7/etc/")
-        // .config("spark.yarn.principal", "houleilei@XTALPI-BJ.COM")
-        // .config("spark.security.credentials.hive.enabled", "false")
-        // .config("spark.security.credentials.hbase.enabled", "false")
-        // .config("spark.yarn.keytab", keytabPath)
+        val sc = spark.sparkContext
 
-        HadoopUtils.addHadoopConfigToSaprk(spark.sparkContext)
-        val rdd = spark.sparkContext.textFile(HadoopUtils.hdfsHome + "test.txt")
+        HadoopUtils.addHadoopConfigToSaprk(sc)
+        val rdd = sc.textFile(HadoopUtils.hdfsHome + "test.txt")
         rdd.foreach(x => println(x))
         // rdd.saveAsTextFile(HadoopUtils.hdfsHome + "output") // 当访问内容的时候 RDD 才会去加载数据
     }

@@ -5,21 +5,6 @@ import org.apache.spark.sql.{Encoder, SparkSession}
 
 object SparkDataset {
 
-    val os: String = System.getProperty("os.name")
-
-    var sparkHome: String = _  // IDE 推荐使用 _ 而不是 null, scala 中 的 _ 代表什么 ? println(_) 会报错
-    var workHome: String = _
-
-    if (os != null && os.toLowerCase().indexOf("linux")> -1){
-        sparkHome = "/home/holyzing/snap/apache/spark-3.0.1-bin-hadoop2.7"
-        workHome = "/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi"
-    } else {
-        sparkHome = "F:/apache/spark-3.0.1-bin-hadoop2.7/test"
-        workHome = "F:/mywork/Scala/xtalpi"
-    }
-    sparkHome = sys.env.getOrElse("SPARK_HOME", sparkHome)  // windows 下是生效的
-    sparkHome = sparkHome.replace("\\", "/")
-
     def main(args: Array[String]): Unit = {
         datasetApi()
     }
@@ -34,7 +19,7 @@ object SparkDataset {
         // DataFrame API: JAVA Python R Scala
         // DataFrame: 无类型的但肯定是强类型的 （类型是 Row），而DataSet 是强类型的
 
-        val df = spark.read.json(sparkHome + "/examples/src/main/resources/people.json")
+        val df = spark.read.json(HadoopUtils.sparkHome + "/examples/src/main/resources/people.json")
         df.printSchema(level = 0)
         df.select("name").show()
 

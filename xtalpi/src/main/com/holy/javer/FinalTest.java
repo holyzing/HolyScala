@@ -8,7 +8,7 @@ package com.holy.javer;
 
 abstract class AbstractClass2{
     public void test(){
-
+        test2();
     }
 
     public abstract void test2();
@@ -16,7 +16,7 @@ abstract class AbstractClass2{
 
 abstract class AbstractClass3 extends AbstractClass2 {
     public void test(){
-
+        test3();
     }
     public abstract void test3();
 }

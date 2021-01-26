@@ -16,6 +16,8 @@ object ScalaSign {
      * scala 中使用 def 定义一个成员方法
      * scala 中方法的签名与方法体之间使用 = 连接，是因为 scala中的方法也是一个对象，方法体就是 new 一个对象，然后赋值给变量去引用。
      * scala 中不强调类型，所以在声明一个类型的时候将类型写在后边，甚至可以不写，但却又是强类型的，所以它编译的时候会进行类型推断
+     *
+     * scala 编译器在 默认情况下 总会引入 java.lang._ 、 scala._ 和 Predef._ 这也是 可以直接 使用println 等基础函数的原因
      */
     def main(args: Array[String]): Unit = {
         val la = Array("hello you","hello me","hello world")
@@ -32,7 +34,9 @@ object ScalaSign {
 
         val words1 = bigArr.map((_, 1))
         val words2 = bigArr.map(x => (x, 1))
-
+        println(s"name=${"lulu"}, age=${26}, gender=${'F'}")
+        println(f"name=${"lulu"}, age=${26.0}%.2f, gender=${'F'}")
+        println(raw"\n, ${2.0}%.2f \t")
     }
 }
 
