@@ -415,6 +415,7 @@ class SparkRDD {
          */
         // TODO spark 默认会加载 classpath 路径下的 hadoop配置文件，name是在哪里出发加载的呢 ？
         println(System.getenv("SPARK_USER"))
+        HadoopUtils.setProperties()
         val spark = SparkSession.builder()
             .config(conf)
             .config("spark.submit.deployMode", "client")
@@ -431,8 +432,7 @@ class SparkRDD {
             .appName("FisrtStep")
             .master(master).getOrCreate()
         val sc = spark.sparkContext
-
-        HadoopUtils.addHadoopConfigToSaprk(sc)
+        HadoopUtils.hadoopConfig(sc.hadoopConfiguration)
         val rdd = sc.textFile(HadoopUtils.hdfsHome + "test.txt")
         rdd.foreach(x => println(x))
         // rdd.saveAsTextFile(HadoopUtils.hdfsHome + "output") // 当访问内容的时候 RDD 才会去加载数据
