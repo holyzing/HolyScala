@@ -1,10 +1,10 @@
 package com.holy.sparker
 
+import org.junit.Test
 import org.apache.spark._
 import org.apache.spark.streaming._
 import org.apache.spark.storage.StorageLevel
 import org.apache.spark.streaming.scheduler.StreamingListener
-import org.junit.Test
 // import org.apache.spark.streaming.StreamingContext._ // not necessary since Spark 1.3
 
 

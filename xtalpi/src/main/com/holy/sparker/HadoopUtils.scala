@@ -60,6 +60,7 @@ object HadoopUtils {
         // spark.hadoopConfiguration.set("dfs.namenode.kerberos.principal.pattern", "*/*@XTALPI-BJ.COM")
         // spark.hadoopConfiguration.set("dfs.namenode.kerberos.principal", "nn/_HOST@XTALPI-BJ.COM")
 
+        // NOTE Configuration 静态代码块会主动加载 classpath 下的配置文件
         spark.hadoopConfiguration.addResource("core-site.xml")
         spark.hadoopConfiguration.addResource("hdfs-site.xml")
         spark.hadoopConfiguration.addResource("yarn-site.xml")

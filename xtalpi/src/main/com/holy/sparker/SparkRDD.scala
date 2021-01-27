@@ -1,7 +1,5 @@
 package com.holy.sparker
 
-import com.holy.sparker.HadoopUtils.keytabPath
-import org.apache.spark
 import org.apache.spark.sql.SparkSession
 import org.apache.spark.util.AccumulatorV2
 import org.apache.spark.{SparkConf, SparkContext}
