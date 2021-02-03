@@ -38,7 +38,7 @@ object ValVar {
          * Char      'a'， 'b'，'\n'
          * String    "a", "\n", "haha"
          * Null      null                 Scala.Null和scala.Nothing是用统一的方式处理Scala面向对象类型系统的某些"边界情况"的特殊类型。
-         * Null 是每个引用类（继承自AnyRef的类）的子类。Null不兼容值类型
+         * Null                           是每个引用类（继承自AnyRef的类）的子类。Null不兼容值类型
          * Nothing
          * Unit      ()
          * Any                            scala 中所有 “其他类” 的超类
@@ -73,7 +73,7 @@ class ValVar {
         // Symbol literals are deprecated in Scala 2.13. Use Symbol("x") instead.
         val f = Symbol("x")
         val g: Null = null
-        print(d, e, f, g)
+        println(d, e, f, g)
         val multiLineString =
             """
               |
