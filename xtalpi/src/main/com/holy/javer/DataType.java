@@ -7,7 +7,10 @@ public class DataType {
         byte b = 10;
         short s = 20;
         int i = b + s;
-        // b = b + s; // 运算符指令不够,将所有int 下的数据类型之间的 + 操作提升为 int 类型的操作
+        // b = b + s;       // 运算符指令不够,将所有int 下的数据类型之间的 + 操作提升为 int 类型的操作
+        String _ = "_";     // java 9 已经不支持 _单独使用下划线做标识符了
+        String _1 = "_1";
+        System.out.println(_ + _1);
     }
     public static void test(byte b) {
         System.out.println("bbbb");

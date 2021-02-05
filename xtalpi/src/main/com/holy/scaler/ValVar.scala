@@ -44,16 +44,13 @@ object ValVar {
          * Boolean   true，false
          * Char      'a'， 'b'，'\n'       16位无符号的Unicode 编码
          * String    "a", "\n", "haha"
-<<<<<<< HEAD
          *
          * Unit      唯一实例 ()
          * Null      唯一实例 null
          *           是每个引用类（继承自AnyRef的类）的子类。Null不兼容值类型
          *           Scala.Null和scala.Nothing是用统一的方式处理Scala面向对象类型系统的某些"边界情况"的特殊类型。
-=======
          * Null      null                 Scala.Null和scala.Nothing是用统一的方式处理Scala面向对象类型系统的某些"边界情况"的特殊类型。
          * Null                           是每个引用类（继承自AnyRef的类）的子类。Null不兼容值类型
->>>>>>> ee69e29436a1ce56e599341a1d5c710451258568
          * Nothing
          * Any                            scala 中所有 “其他类” 的超类
          * AnyRef                         scala 中所有 “引用类” 的基类
@@ -90,7 +87,7 @@ class ValVar {
         val s: String = g       // 引用类型的隐式转换
         val dd: Double = 2f     // 值类型的隐式转换
         print(d, e, f, g)
-        println(d, e, f, g)
+        println(d, e, f, g, s, dd )
         val multiLineString =
             """
               |
@@ -108,5 +105,36 @@ class ValVar {
 
     def testNothing: Nothing = {
         throw new Exception("没有一个正常的返回值")
+    }
+
+    @Test
+    def identifier(): Unit ={
+        // scala 支持各种特殊符号作为标识符，编译为字节码后，由符号对应的单词标识，
+        //       但是当特殊符号（运算符）与其它一般字符连接使用时则编译器会报错，因为特殊符号可能会被当做操作符编译
+        val ++ = 1
+        val -- = 2
+        val ** = 3
+        val \\ = 4
+        val / = 5
+        val +-*/ = 6
+        // val _ = 7        // 在scala中下划线不能单独作为标识符，但是在java中是可以的
+        val 变量 = 8         // unicode 字符都可以作为标识符，和python中一样
+        val `private` = 9    // 使用飘号可以将scala中的保留字作为标识符
+        val Int = 10
+        val int = 11         // 反编译后可能不准确，依旧是 int
+        println(++, --, **, \\, /, +-*/, 变量, `private`, Int, int)
+
+       for(i <- 1 to 2) {
+
+       }
+        for(i <- 1 until 2){
+            null
+        }
+
+
+        // scala 特有的关键字： object trait with sealed implict match yield def val var type lazy override
+        // scala 中没有的关键字： throws static public void implement friendly
+        // 共有的：package import object class protected private final abstract extend null
+        //        new this super try catch finally throw if else do while case for true false return
     }
 }
