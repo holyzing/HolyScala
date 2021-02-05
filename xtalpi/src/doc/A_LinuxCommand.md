@@ -30,3 +30,4 @@
 21. dig
 22. iptables -t nat -nvL
 23. telnet ip port
+24. cat >> msg.log << EOF

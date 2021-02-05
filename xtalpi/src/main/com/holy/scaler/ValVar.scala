@@ -44,11 +44,16 @@ object ValVar {
          * Boolean   true，false
          * Char      'a'， 'b'，'\n'       16位无符号的Unicode 编码
          * String    "a", "\n", "haha"
+<<<<<<< HEAD
          *
          * Unit      唯一实例 ()
          * Null      唯一实例 null
          *           是每个引用类（继承自AnyRef的类）的子类。Null不兼容值类型
          *           Scala.Null和scala.Nothing是用统一的方式处理Scala面向对象类型系统的某些"边界情况"的特殊类型。
+=======
+         * Null      null                 Scala.Null和scala.Nothing是用统一的方式处理Scala面向对象类型系统的某些"边界情况"的特殊类型。
+         * Null                           是每个引用类（继承自AnyRef的类）的子类。Null不兼容值类型
+>>>>>>> ee69e29436a1ce56e599341a1d5c710451258568
          * Nothing
          * Any                            scala 中所有 “其他类” 的超类
          * AnyRef                         scala 中所有 “引用类” 的基类
@@ -85,6 +90,7 @@ class ValVar {
         val s: String = g       // 引用类型的隐式转换
         val dd: Double = 2f     // 值类型的隐式转换
         print(d, e, f, g)
+        println(d, e, f, g)
         val multiLineString =
             """
               |
