@@ -11,6 +11,9 @@ public class DataType {
         String _ = "_";     // java 9 已经不支持 _单独使用下划线做标识符了
         String _1 = "_1";
         System.out.println(_ + _1);
+        int a = 0;
+        a = a++;
+        System.out.println(a);
     }
     public static void test(byte b) {
         System.out.println("bbbb");

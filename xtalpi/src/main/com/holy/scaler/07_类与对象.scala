@@ -22,6 +22,20 @@ package com.holy.scaler
  */
 
 
+/**
+ * scala 中无法在 class 中声明 成员为 static，所以
+ * class 在未实例化之前，其中任何成员是不能被直接访问的， 也就是说 class 中的 main 方法是不能直接被调用的。
+ *
+ * java 中外部类不能是静态的，只有内部类才可以是静态的，内部静态类作为外部类的成员可以被直接访问。
+ *
+ * 声明一个未用priavate修饰的字段 var age，scala编译器会字段帮我们生产一个私有字段和2个公有方法get和set,
+ * 这和C#的简易属性类似； 若使用了private修饰，则它的方法也将会是私有的。这就是所谓的统一访问原则。
+ *
+ * object 的成员在被虚拟机加载的时候会被初始化
+ */
+
+
+
 class Geometry {
 
 }
@@ -82,3 +96,30 @@ object Location{
     }
 }
 
+class Method private{  // 私有化无参构造，隐藏构造器，但是对于主 object 不是私有的
+    private[this] var age = 18    // 只能被 this 访问，编译器不会为起创建 getAge 和 setAge 方法
+    private var name: String = _  // 预留变量，_ 是为了初始化。编译器自动为起创建 getName 和 setName 方法
+    println("默认构造，在类Method中是一个无参构造")
+
+    // def this(){this}  无参构造不能被被显式 定义，如果定义了，则在runtime 的时候 会出现 ambiguous 的错误，
+    // 因为在scala 中 类体就是一个构造体，类不带参数的时候，就是无参构造。类带参数的时候，就是默认的构造函数，
+    // 每一个类体内的其它构造函数都要显式调用与类参数列表一样的构造函数。
+
+    def this(name: String) {
+        this()                    // 同java 一样必须 在有参构造第一行 显式调用
+        this.name = name
+        println("带参构造")
+    }
+
+    def sayHello(){println("Helo Word!")}
+
+    def getAge: Int = this.age
+
+    def setAge(age: Int): Unit ={
+        this.age = age
+    }
+
+    /**
+     * 伴生类 中 定义 main 方法，会覆盖 object 的 main 方法，执行 object 中的main 方法 会出现 main 未定义的错误
+     */
+}

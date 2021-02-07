@@ -49,11 +49,12 @@ object ValVar {
          * Null      唯一实例 null
          *           是每个引用类（继承自AnyRef的类）的子类。Null不兼容值类型
          *           Scala.Null和scala.Nothing是用统一的方式处理Scala面向对象类型系统的某些"边界情况"的特殊类型。
-         * Null      null                 Scala.Null和scala.Nothing是用统一的方式处理Scala面向对象类型系统的某些"边界情况"的特殊类型。
-         * Null                           是每个引用类（继承自AnyRef的类）的子类。Null不兼容值类型
+         *           Scala.Null和scala.Nothing是用统一的方式处理Scala面向对象类型系统的某些"边界情况"的特殊类型。
+         *           是每个引用类（继承自AnyRef的类）的子类。Null不兼容值类型
+         *
          * Nothing
-         * Any                            scala 中所有 “其他类” 的超类
-         * AnyRef                         scala 中所有 “引用类” 的基类
+         * Any       scala 中所有 “其他类” 的超类
+         * AnyRef    scala 中所有 “引用类” 的基类
          *
          * "Symbol"  'x，Symbol(“x”)      符号字面量，不能以数字开头，被映射成 预定义类 scala.Symbol 的实例。‘<标识符>
          *
@@ -117,23 +118,23 @@ class ValVar {
         val \\ = 4
         val / = 5
         val +-*/ = 6
-        // val _ = 7        // 在scala中下划线不能单独作为标识符，但是在java中是可以的
-        val 变量 = 8         // unicode 字符都可以作为标识符，和python中一样
+        // val _ = 7         // 在scala中下划线不能单独作为标识符，但是在java中是可以的
+        // val 变量 = 8       // unicode 字符都可以作为标识符，和python中一样
         val `private` = 9    // 使用飘号可以将scala中的保留字作为标识符
         val Int = 10
         val int = 11         // 反编译后可能不准确，依旧是 int
-        println(++, --, **, \\, /, +-*/, 变量, `private`, Int, int)
+        println(++, --, **, \\, /, +-*/, `private`, Int, int)
 
-       for(i <- 1 to 2) {
-
-       }
-        for(i <- 1 until 2){
-            null
+        for (i <- 1 to 2) {
+            println(i)
         }
 
+        for (i <- 1 until 2) {
+            println(i, null.getClass, ().getClass)
+        }
 
         // scala 特有的关键字： object trait with sealed implict match yield def val var type lazy override
-        // scala 中没有的关键字： throws static public void implement friendly
+        // scala 中没有的关键字： throws static public void implement friendly switch
         // 共有的：package import object class protected private final abstract extend null
         //        new this super try catch finally throw if else do while case for true false return
     }

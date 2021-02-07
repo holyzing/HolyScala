@@ -1,15 +1,31 @@
 package com.holy.scaler
 
-import java.io.{File, PrintWriter}
+import org.junit.Test
 
+import java.io.{File, PrintWriter}
 import scala.io.{BufferedSource, Source, StdIn}
+import java.util.Scanner
 
 /**
  * Scala 进行文件写操作，直接用的都是 java中 的 I/O 类 （java.io.File)：
  */
+class IONIO {
 
-object IOTest {
-    def main(args: Array[String]) {
+    @Test
+    def consoleRead(): Unit = {
+        val scan: Scanner = new Scanner(System.in)
+        val javaName = scan.next()
+        val javaAge = scan.nextInt()
+        val javaDouble = scan.nextDouble()
+        scan.close()
+        println(javaName, javaAge, javaDouble)
+
+        println(StdIn.readLine(), StdIn.readInt(), StdIn.readDouble())
+
+    }
+
+    @Test
+    def testFileWrite(args: Array[String]) {
         val writer = new PrintWriter(new File("test.txt" ))
         writer.write("菜鸟教程")
         writer.close()
