@@ -1,5 +1,6 @@
 package com.holy.scaler
 
+import com.holy.test
 import org.junit.Test
 
 
@@ -38,7 +39,7 @@ object MyString{
 // ctrl (shift) +/-
 class MyString{
 
-    @Test
+    @test.Test
     def arrayTest(): Unit ={
         // import java.lang.{String, StringBuffer, StringBuilder}
         printf("浮点数：%f 整形：%d 字符串：%s", 1.0, 1, "1")
@@ -125,7 +126,7 @@ class MyString{
         println(optionNone1, optionNone2.get, optionSome1.get, optionSome2.get)
     }
 
-    @Test
+    @test.Test
     def listTest(): Unit ={
         // Scala 列表类似于数组，它们所有元素的类型都相同，长度固定  TODO Tuple ？？   (immutable recursive data)
         // 但是它们也有所不同：列表是不可变的，值一旦被定义了就不能改变，其次列表 具有递归的结构（也就是链接表结构）而数组不是。。
@@ -178,7 +179,7 @@ class MyString{
 
     }
 
-    @Test
+    @test.Test
     def setTest(): Unit ={
         /**
          * 虽然可变Set和不可变Set都有添加或删除元素的操作，但是有一个非常大的差别。对不可变Set进行操作，会产生一个新的set，
@@ -192,7 +193,7 @@ class MyString{
         println("setTest")
     }
 
-    @Test
+    @test.Test
     def mapTest(): Unit ={  // 静态的 不能使用 Junit 测试
         /**
          * Map 也叫哈希表（Hash tables）。
@@ -218,7 +219,7 @@ class MyString{
 
     }
 
-    @Test
+    @test.Test
     def tupleTest(): Unit ={
         // 与列表一样，元组也是不可变的，但与列表不同的是元组可以包含不同类型的元素。
         val t1 = (1, 3.14, "Fred")
@@ -231,7 +232,7 @@ class MyString{
         t2.productIterator.foreach(i=>{println("str:" + i)})
     }
 
-    @Test
+    @test.Test
     def iteratorTest(): Unit ={
         val it = Iterator(20,40,2,50,69, 90)
         // println(it.max)
@@ -243,7 +244,7 @@ class MyString{
         // TODO 将迭代器指向的所有元素拷贝至缓冲区 Buffer。
     }
 
-    @Test
+    @test.Test
     def seqTest(): Unit ={
         println("seq Test")
     }

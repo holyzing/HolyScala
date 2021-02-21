@@ -1,5 +1,6 @@
 package com.holy.scaler
 
+import com.holy.test
 import org.junit.Test
 
 import scala.util.control.Breaks
@@ -50,7 +51,7 @@ class CodeFlow {
         }
     }
 
-    @Test
+    @test.Test
     def forTest(): Unit = {
         /**
          * java 中的循环方式有两种: for(int i=1; i < 10; i++) ; for(item: iterableCollection)
@@ -120,7 +121,7 @@ class CodeFlow {
         // NOTE java 中的静态导入 import static com.Test.*
     }
 
-    @Test
+    @test.Test
     def ifTest(): Unit = {
         /**
          * NOTE scala 中 if 语句的 判定表达式的值类型必须是 Boolean 类型,而 python 则不是.
@@ -148,7 +149,7 @@ class CodeFlow {
         // NOTE 一般嵌套分支不要超过三层
     }
 
-    @Test
+    @test.Test
     def matchCase(): Unit ={
         /**
          * 可以代替 Java 中 的 switch, java 的Switch 存在一个 穿透问题, 其实就是忘记写 break,被依次执行.

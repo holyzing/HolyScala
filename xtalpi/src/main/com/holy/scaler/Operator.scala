@@ -2,17 +2,50 @@ package com.holy.scaler
 
 import org.junit.Test
 
-import scala.util.control.Breaks
 
 // public final class Object
 object Operator {
     /**
-     * 將 该文件内的 scala 语法编译在 Operate$ 的字节码中，并通过静态成员的引用，层层引用直到 java 语法。
      * Java 是一个面向对象的语言，但不是完全的，因为它还存在 基本类型 static null 等非对象引用。
-     * 为了支持 java 中的静态访问，scala 提供了一个 object 关键字来告诉编译器 在编译 object 修饰的结构的时候
-     * 编译成两个 类，一个是最终类，它包含object 中定义了被添加了 static 修饰的成员，另一个是普通类，包含object中成员的实现，
-     * 最终类通过一个静态成员 Module 引用普通类的实例，从而引用对应普通类中的普通成员，在scala 中被object所修饰的结构称为
-     * 伴生对象，但其实它是一个最终类，通过这样的方式，scala中支持了使用类名访问成员的操作。
+     * 为了支持 java 中的静态访问，scala 提供了一个 object 关键字来告诉编译器 在编译 object 修饰的结构生成如下两个类
+     *
+     * 最终虚构类 （以$结尾）：
+     *     1- 虚构类的公有的静态实例 public static Test$ MODULE$;
+     *     2- 自身定义的成员变量与成员常量以及成员方法，成员变量和成员常量均是private，
+     *        成员方法是 public, 但是成员常量用 final 修饰
+     *        private final String val1;
+     *        private String var1;
+     *     3- 为成员变量和常量生成同名无参方法，并返回成员变量和常量
+     *     4- 为成员变量 提供类似 var1_$eq 的setter 方法，下划线前市变量名，下划线后是 $eq
+     *     5- 局部变量和常量均被编译为普通的成员变量
+     *     6- 生成私有的无参构造函数，函数体中对成员变量和常量进行了初始化：
+     *         MODULE$ = this;
+     *         this.val1 = "伴生对象常量";
+     *         this.var1 = "伴生对象变量";
+     *     7- 将main方法编译为普通的main方法 public void main(String[] args)
+     *     8- 生成一个静态代码块，静态代码块中调用 无参构造，new Test$()
+     *
+     *  伴生类：
+     *     1- 自身定义的成员变量与成员常量以及成员方法，成员变量和成员常量均是private，
+     *        成员方法是 public, 但是成员常量用 final 修饰
+     *        private final String val1;
+     *        private String var1;
+     *     2- 为成员变量和常量生成同名无参方法，并返回成员变量和常量
+     *     3- 为成员变量 提供类似 var1_$eq 的setter 方法，下划线前市变量名，下划线后是 $eq
+     *     4- 编译器自动为 伴生对象中生成的 同名方法（getter）和 *_$eq (setter) 方法 以及普通成员方法，
+     *        在伴生类中都会为其生成一个相同签名的静态方法。函数体中通过单例对象调用 伴生对象中相同签名的普通方法。
+     *        当然也包括 main 方法。
+     *
+     *  1- 由于scala 编译器会为伴生类和伴生对象中的成员变量和常量生成同名方法，
+     *     所以在 scala中 成员变量和常量与方法不能同名，而在java中是可以的。
+     *  2- 伴生对象和伴生类中不能同时定义 main 方法。
+     *  3- 如果伴生对象中和伴生类中定义了同名的成员，则不会为其生成对应的静态方法。
+     *  4- 伴生对象不包含任何伴生类的信息。
+     *  5- 伴生对象天生就是单例对象。
+     *  6- TODO 为什么在伴生类中定义构造函数（无参构造与带参构造），
+     *     TODO 就不能直接通过 伴生对象引用其成员，构造函数 与 apply 函数之间的关系？
+     *     TODO 伴生类中的构造函数 与 伴生对象的关系？
+     *     TODO 伴生对象中定义的构造函数是怎么样的 ？
      *
      * scala 中默认的成员都是 public 的，所以没有public 关键字  但支持了 private 和 protected，
      * scala 中采用特殊对象 Unit 来模拟  java 中 的关键字 void 来表示没有返回
@@ -73,7 +106,8 @@ class Operator{
     def arithmeticOperator(): Unit ={
         val v: Int = 10 / 3         // NOTE 整数除只保留整数 和 浮点数除保留浮点数的精度
         println(v, 10 / 3, 10.0 / 3, 10 / 3.0)
-        var b: Byte = 1
+        val b: Byte = 1
+        println(b)
         // b = b + 1                // NOTE java 和scala 的编译器都会直接报错
         // b += 1                   // NOTE 运行时赋值运算符左侧类型提升,无法赋值给精度更小的类型,报错. 但是java中会进行精度缩减
     }
@@ -102,11 +136,11 @@ class Operator{
     def byteOPerate(): Unit ={
         var a = 10
         var b = 20
-        println(s"a=${a} b=${b}")
+        println(s"a=$a b=$b sum=${a + b}")
         a = a ^ b   // crc 网络数据校验中用到很多抑或操作
         b = a ^ b   // 而在实际计算中则会用到很多 & 运算
         a = a ^ b
-        println(s"a=${a} b=${b}")
+        println(s"a=$a b=$b")
     }
     //NOTE scala 中没有 三目运算符,因为在java 中包含三目运算符的表达式可能有值也可能没值,容易产生歧义
     //NOTE 三目运算符完全可以用 if ... else ... 来实现

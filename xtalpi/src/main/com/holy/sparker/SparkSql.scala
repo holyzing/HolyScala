@@ -1,11 +1,9 @@
 package com.holy.sparker
 
+import com.holy.extra.caseClass.Record
 import org.apache.spark.TaskContext
 import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 
-
-// THINK case class 必须定义在类的外部 ????
-case class Record(key: Int, value: String)
 
 object SparkSql {
     def main(args: Array[String]): Unit = {

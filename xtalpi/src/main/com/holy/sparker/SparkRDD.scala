@@ -1,60 +1,9 @@
 package com.holy.sparker
 
+import com.holy.extra.VectorAccumulatorV2
 import org.apache.spark.sql.SparkSession
-import org.apache.spark.util.AccumulatorV2
 import org.apache.spark.{SparkConf, SparkContext}
 import org.junit.Test
-
-object MyVector {
-    def createZeroVector: MyVector ={
-        new MyVector
-    }
-}
-
-class MyVector  {
-    /**
-     * representing mathematical vectors
-     */
-    def reset(): Unit ={
-
-    }
-
-    def add(V: MyVector): Unit ={
-        V.reset()
-    }
-
-}
-
-
-class VectorAccumulatorV2 extends AccumulatorV2[MyVector, MyVector]{
-
-    private val myVector: MyVector = MyVector.createZeroVector
-
-    override def isZero: Boolean = {
-        false
-    }
-
-    override def copy(): AccumulatorV2[MyVector, MyVector] = {
-        new VectorAccumulatorV2
-    }
-
-    override def reset(): Unit = {
-        myVector.reset()
-    }
-
-    override def add(v: MyVector): Unit = {
-        myVector.add(v)
-    }
-
-    override def merge(other: AccumulatorV2[MyVector, MyVector]): Unit = {
-
-    }
-
-    override def value: MyVector = {
-        myVector
-    }
-}
-
 
 object SparkRDD {
     def main(args: Array[String]): Unit = {
