@@ -15,7 +15,7 @@ import org.junit.Test
  *    2- 调用函数
  */
 
-object ScalaFunctionBase{
+object FunctionBase{
     def main(args: Array[String]): Unit = {
         // NOTE: scala 的语法结构允许在任何 code block 中声明其它 code block, 也就是在语法中声明语法。
         // NOTE: java 中在 一个方法中可以声明一个局部内部类的语法规则与 scala 有些相似 。
@@ -53,7 +53,7 @@ object ScalaFunctionBase{
     }
 }
 
-class ScalaFunctionBase {
+class FunctionBase {
     /**
      * scala 是一个完全面向对象的编程语言，同时也完全是函数式编程语言，
      * 这意味着 多范式编程语言 scala 中所有的元素都是对象同时也都是函数。

@@ -16,7 +16,7 @@ import scala.annotation.tailrec
  * 后缀操作符  obj op      被解释称 obj.op
  */
 
-object ScalaFunction{
+object FunctionMore{
     // scala 的标识符中不能包含中文字符
     // scala没有静态的修饰符，但object下的成员都是 "静态的" ,若同一包下有同名的class,则视其为 object 的 "伴生类"。
 
@@ -50,7 +50,7 @@ object ScalaFunction{
 }
 
 
-class ScalaFunction{
+class FunctionMore{
     /**
      * 函数的调用
      *    传值调用（call-by-value）：先计算参数表达式的值，再应用到函数内部,
@@ -84,10 +84,10 @@ class ScalaFunction{
      */
 
 
-    var instance: ScalaFunction = _
+    var instance: FunctionMore = _
 
     def apply(f: Int => String, x: Int): String = {
-        if (instance == null) instance = new ScalaFunction()
+        if (instance == null) instance = new FunctionMore()
         f(x)
 
         @tailrec  // 递归函数好的注释

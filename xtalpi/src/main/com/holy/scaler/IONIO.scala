@@ -6,14 +6,13 @@ import java.io.{File, PrintWriter}
 import scala.io.{BufferedSource, Source, StdIn}
 import java.util.Scanner
 
-import com.holy.test
 
 /**
  * Scala 进行文件写操作，直接用的都是 java中 的 I/O 类 （java.io.File)：
  */
 class IONIO {
 
-    @test.Test
+    @Test
     def consoleRead(): Unit = {
         val scan: Scanner = new Scanner(System.in)
         val javaName = scan.next()
@@ -26,8 +25,8 @@ class IONIO {
 
     }
 
-    @test.Test
-    def testFileWrite(args: Array[String]) {
+    @Test
+    def testFileWrite() {
         val writer = new PrintWriter(new File("test.txt" ))
         writer.write("菜鸟教程")
         writer.close()
