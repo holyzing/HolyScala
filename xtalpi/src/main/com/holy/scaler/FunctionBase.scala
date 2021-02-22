@@ -20,13 +20,13 @@ object FunctionBase{
         // NOTE: scala 的语法结构允许在任何 code block 中声明其它 code block, 也就是在语法中声明语法。
         // NOTE: java 中在 一个方法中可以声明一个局部内部类的语法规则与 scala 有些相似 。
         // NOTE: 所谓 函数是不直接定义在类型中的方法，scala 中方法可以重载而函数不可以。
-        // NOTE: scala 中没有 throws 关键字，所以在函数中如果有其它的异常抛出也不需要跟着抛出或者捕获，由编译器处理
+        // NOTE: scala 中没有 throws 关键字，所以在函数中如果有其它的异常抛出,需要使用 try catch 捕获。
 
         def test1(): Unit = println("声明函数时加 （）")  // 0参函数
         def test2: Unit = println("声明函数没加 （）")    // 无参函数
 
         // scala 可以通过类型推断来简化函数的声明，比如返回类型的推断
-        // NOTE  但是当函数签名的返回类型显示声明为 Unit 时，return 不起作用，始终返回的是 Unit
+        // NOTE  但是当函数签名的返回类型显示声明为 Unit 时，return 结束函数执行，但是返回值无效，始终为 Unit
         def test3(): Unit ={return "lu"}  // Returning Unit from a method with Unit result type
 
         def test4(): String ={"lu"}       // 省略 return
@@ -114,14 +114,46 @@ class FunctionBase {
         }
         println(func1((a: Int) => a + 5))   // 匿名函数
         println(func1(argFunction))
+
+        def func(f:(String)=> Unit): Unit ={f("lu")}
+        func((s:String)=>{println(s)})
+        func((s)=>{println(s)})
+        func(s=>println(s))
+        func(println(_))
+        func(println)
+
+        def f(sum:(Int, Int)=>Int, a: Int=10, b:Int=20): Int = {sum(a, b)}
+        println(f((a:Int, b:Int)=> {a + b}))
+        println(f((a, b)=> {a + b}))
+        println(f((a, b)=> a + b))
+        println(f(_+_))  // NOTE 函数体只有一个表达式，且参数列表中的参数在一个表达式内只调用一次
     }
 
     @Test
     def anonymousFunction(): Unit ={
+        def f = 10
+        val v = f
+        val vf = f _
+        println(f, v, vf)
+
+        def f2() = 20
+        println(f2, f2(), f2 _, (f2 _)())
+
         println("--------------------------------------------------------------------------------------")
         val a = "args"
         (a)->{print(a)}                   // THINK 匿名函数的声明就是引用 ?????
         (a: Int) => {a + 3}               // THINK 到底哪个是匿名函数 ？？？？ 为什么到这里就不往下执行了 ？？
         println("--------------------------------------------------------------------------------------")
     }
+
+    /**
+     * JVM 堆上对象并不一定能被及时回收，GC 的执行是不确定的，HIbernate 的弃用 就是随着数据量的增加，
+     * 不仅是数据库中的数据会转换成一个个的对象，而且会产生很多中间数据，从而占用大量内存导致性能下降。
+     * 有时候一个对象在函数执行完成之后就应该被及时回收，从而在近代 JVM 中支持了栈上分配的机制，
+     * 当一个变量出栈之后是直接释放内存的，所以不需要回收，但是也伴随着逃逸分析的问题，
+     * 当函数内部变量需要被返回去 或者 函数入参了一个外部的引用变量的时候是不能直接被释放的，
+     * 因为 它逃逸出 方法了，是不能放在 栈上的。
+     *
+     * 闭包是 外部函数变量作用域的延伸，延伸到内部函数 闭包
+     */
 }
