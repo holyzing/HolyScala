@@ -10,7 +10,7 @@ import java.io.{FileNotFoundException, FileReader, IOException}
  * 如果抛出的异常不在catch字句中，该异常则无法处理，会被升级到调用者处。
  */
 
-object ScalaMatchAndException {
+object MatchAndException {
     def main(args: Array[String]): Unit = {
         try {
             val f = new FileReader("input.txt")
