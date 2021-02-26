@@ -52,6 +52,7 @@ class ClassBase {
         // 6- scala 中 子包引用父包中的类不需要导包。
         // 7- package 下只能声明类，但是这又违背了 scala中的语法嵌套，
         //    所以 scala 又提供了 包对象的概念。
+
         println("伴生类中的方法：packageDeclare")
     }
 
