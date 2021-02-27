@@ -22,6 +22,19 @@ package scaler {
     }
 
     package innerPackage{
+
+        package object innerPackage {
+            def ssy(): Unit ={
+                println("innerPackage 包对象 innerPackage")
+            }
+        }
+
+        package object innerPackage2 {
+            def ssy(): Unit ={
+                println("innerPackage 包对象 innerPackage2")
+            }
+        }
+
         object InnferPackageObject{
             def main(args: Array[String]): Unit = {
                 val cb = new ClassBase()
@@ -54,6 +67,25 @@ class ClassBase {
         //    所以 scala 又提供了 包对象的概念。
 
         println("伴生类中的方法：packageDeclare")
+    }
+
+    @Test
+    def importDeclare(): Unit ={
+        // 1- 在scala 中的任何作用域内都可以 导入类, 导入类的作用域为当前作用域
+        // 2- 通过 _ 代替 java 中的通配符 * 来实现一个包下所有类的导入
+        // 3- 通过 {}可以实现一个包下类的选择性导入.
+        // 4- java 中在一个源文件下直接导入同名类会报错,而scala 则可以将同名类隐藏
+        // 5- scala 中可以直接导入一个包, 然后通过包名引用其下的类
+        // 6- 当与系统类库与源码类出现包冲突的时候 通过 _root_ (绝对路径)来引入顶层类
+        // 7- scala 可以为导入类起一个别名
+
+        // import java.util.Date
+        import java.sql.Date
+        import java.util.{Date=>_}
+        // println(Date)       // class java.sql.Date is not a value
+        import java.util.{HashMap=>JavaHashMap}
+        println(new Date(2021),getClass, new _root_.java.util.HashMap[String, String]())
+        println(new JavaHashMap())
     }
 
     def handler(): Unit = {
