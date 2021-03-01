@@ -4,6 +4,9 @@ import com.holy.ClassBase
 import com.holy.scaler.innerPackage.InnferPackageObject
 import org.junit.Test
 
+import scala.annotation.meta.{beanGetter, beanSetter}
+import scala.beans.BeanProperty
+
 object ClassMember {
     def main(args: Array[String]): Unit = {
         val cm = new ClassMember          // 省略 ()
@@ -11,19 +14,20 @@ object ClassMember {
         cm.username = "lulu"              // 调用 setter 方法 底层签名为 username_$eq
         cm.username_=("lului")            // 像 +-*/ 作为标识符被翻译为 plus 等, = 被翻译为 $eq
         println(cm.age)                   // NOTE 伴生对象是可以访问伴生类的私有成员, 但是在外部是不能直接访问的.
-        println(cm.+("xxx"), cm + "xxx")  // NOTE 省略方法, 连字符
+        // NOTE 当方法只有一个参数时可以省略 . 和 ()
+        // NOTE 并用 空格 依次连接 “调用者 被调用者 参数” 类似的还有 to until等方法的使用
+        println(cm.+("xxx"), cm + "xxx")  // 和java 中的连字符相似，但比 java 中的强大，操作符重载
 
         val cm2 = ClassMember             // 单例的伴生类的实例
         val range1 = Range(1, 5)          // apply
         val range2 = Range(1, 5, 2)       // 方法重载
         println(cm2, range1, range2)
 
-        val cm3 = ClassMember("lulu")     // 注意区分 apply 和 构造方法的区别, 构造方法必须使用 new 来调用
+        val cm3 = ClassMember("lulu")     // NOTE 注意区分 apply 和 构造方法的区别, 构造方法必须使用 new 来调用
 
-        // NOTE scala 作为一种多范式变成语言,可以糅合多种编码风格来实现功能.
     }
 
-    def apply(): ClassMember = new ClassMember()  //伴生对象创建伴生类的实例
+    def apply(): ClassMember = new ClassMember()           //伴生对象创建伴生类的实例
 
     def apply(s: String): ClassMember = new ClassMember()  //伴生对象创建伴生类的实例
 }
@@ -57,9 +61,28 @@ class ClassMember {
     private var age: Int = _    // 底层编译为 private, 提供私有的 getter 和 setter 方法
 
     // val email: String = _    // 不能默认初始化
-    val email: String = "lu"    // 底层编译增加 final 修饰符, 未提供setter 方法,但提供了 getter 方法 email
+    val email: String = "lu"    // “类中”声明底层编译增加 final 修饰符, 只提供了getter方法 email
 
-    def method(): Unit ={
+    // NOTE salca 所谓的 getter 和 setter 是不符合 java 大多数框架（El表达式，SSM）中 基于反射
+    // NOTE 操作 Bean的 getXxx 和 setXxx 方法复规范的，为了和契合 它们提供了注解生成 getset方法
+
+    @beanGetter var bean1: String = _
+    @beanSetter var bean2: String = _
+    @BeanProperty var bean3: String = _
+
+    @Test
+    def constructTest(): Unit ={
+        // java1： 当并没有给定构造函数时，java 虚拟机会默认提供一个公共的无参构造
+        // java2： 构造函数中调用其它构造函数时 使用 关键字 this(args list) 调用
+        // java3： java 中无论是构造函数还非静态成员函数，都注入了 this 关键字，来实现互相调用。
+        // java4:  jvm 为 java中每个构造函数的第一行增加了 super(),来实现父类的初始化。
+
+        // scala1：scala中构造函数分两大类 主构造方法 和 辅构造方法，
+        //         一定得提供主构造方法。而且辅助构造方法中必须调用主构造方法。
+        //         （PS）守护线程为用户线程服务，守护线程不能独立用户线程运行
+        // scala2：scala 是完全面向函数编程的语言，所以类也是函数，通过简化如下函数的定义，
+        //          def Test(): String = {}，并将关键字def换为class，就可以简化为一个最简单的类。
+        //
 
     }
 
@@ -116,6 +139,8 @@ class ClassMember {
     @Test
     def methodTest(): Unit ={
         // 所谓方法就是 定义在类中的函数, 但是在调用方式上与函数有一定的区别
+        // 因为作用域不同，方法必须通过类的实例进行调用，
+        // NOTE scala 作为一种多范式变成语言,可以糅合多种编码风格来实现功能.
     }
 
     @Test
