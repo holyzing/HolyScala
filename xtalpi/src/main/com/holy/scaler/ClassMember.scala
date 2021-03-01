@@ -6,23 +6,36 @@ import org.junit.Test
 
 object ClassMember {
     def main(args: Array[String]): Unit = {
-        val cm = new ClassMember // 省略 ()
-        println(cm.username) // 调用 getter 方法 底层签名为 username
-        cm.username = "lulu" // 调用 setter 方法 底层签名为 username_$eq
-        cm.username_=("lului") // 像 +-*/ 作为标识符被翻译为 plus 等, = 被翻译为 $eq
+        val cm = new ClassMember          // 省略 ()
+        println(cm.username)              // 调用 getter 方法 底层签名为 username
+        cm.username = "lulu"              // 调用 setter 方法 底层签名为 username_$eq
+        cm.username_=("lului")            // 像 +-*/ 作为标识符被翻译为 plus 等, = 被翻译为 $eq
+        println(cm.age)                   // NOTE 伴生对象是可以访问伴生类的私有成员, 但是在外部是不能直接访问的.
+        println(cm.+("xxx"), cm + "xxx")  // NOTE 省略方法, 连字符
 
-        println(cm.+("xxx"), cm + "xxx")  // NOTE 省略方法
+        val cm2 = ClassMember             // 单例的伴生类的实例
+        val range1 = Range(1, 5)          // apply
+        val range2 = Range(1, 5, 2)       // 方法重载
+        println(cm2, range1, range2)
+
+        val cm3 = ClassMember("lulu")     // 注意区分 apply 和 构造方法的区别, 构造方法必须使用 new 来调用
+
+        // NOTE scala 作为一种多范式变成语言,可以糅合多种编码风格来实现功能.
     }
+
+    def apply(): ClassMember = new ClassMember()  //伴生对象创建伴生类的实例
+
+    def apply(s: String): ClassMember = new ClassMember()  //伴生对象创建伴生类的实例
 }
 
 package p1 {
     package p2 {
         class UserP2 {
             var username = "zhangsan"
-            private var password = "123123" // 当前类UserP2能访问
-            protected var email = "@xx.com" // 子类能访问
-            // private[p2] var address = "xxxxx" // 当前包p2能访问
-            //private[p3] var address = "xxxxx" // 当前包p3能访问
+            private var password = "123123"         // 当前类UserP2能访问
+            protected var email = "@xx.com"         // 子类能访问
+            // private[p2] var address = "xxxxx"    // 当前包p2能访问
+            //private[p3] var address = "xxxxx"     // 当前包p3能访问
         }
     }
 
@@ -66,8 +79,7 @@ class ClassMember {
          * 不能说两个实例的父类都是 Object 的, 他们拥有不同的父类.
          *
          * class A {
-         *      @override
-         *      protected Object clone() throws CloneNotSupportedException {
+         *      override protected Object clone() throws CloneNotSupportedException {
          *          return super.clone()
          *      }
          * }
@@ -90,7 +102,7 @@ class ClassMember {
          *
          *      protected的含义是指子类可以访问,说的是子类直接访问父类的protected方法
          *      而不是说子类中,可以通过子类的实例或者父类的对象访问父类的protected方法
-         *      子类可以访问,可以在子类访问不是一个概念
+         *      子类(子类的实例)可以访问,可以在子类访问不是一个概念
          *
          *      你可以访问和在你家访问显然差别很大
          */
@@ -104,8 +116,6 @@ class ClassMember {
     @Test
     def methodTest(): Unit ={
         // 所谓方法就是 定义在类中的函数, 但是在调用方式上与函数有一定的区别
-
-
     }
 
     @Test
