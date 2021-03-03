@@ -55,8 +55,17 @@ package p1 {
     }
 }
 
+abstract class FatherClass{
+    // 抽象方法不需要使用 abstract 声明, 抽象类不能实例化
+    def abstractMethod()
 
-class ClassMember {
+    def commonMethod(): Unit ={
+        println("抽象类的普通方法")
+    }
+}
+
+
+class ClassMember(name: String) extends FatherClass {
     var username: String = _    // 底层编译为 private, 提供公有的 getter 和 setter 方法
     private var age: Int = _    // 底层编译为 private, 提供私有的 getter 和 setter 方法
 
@@ -70,20 +79,62 @@ class ClassMember {
     @beanSetter var bean2: String = _
     @BeanProperty var bean3: String = _
 
+    println("NOTE 构造方法体语句可直接在类体中编写")
+
+    override def abstractMethod(): Unit = {  // override 可以省略
+        println("实现抽象父类的抽象方法!")
+    }
+
+    override def commonMethod(): Unit = {    // override 不可以省略, java 中 override 注解可以省略
+        // super.commonMethod()
+        println("重写抽象父类的普通方法")
+
+    }
+
+    def this(){
+        this("lu")
+        println("主构造方法的调用必须在第一行")
+    }
+
+    def this(name: String, age: Int){
+        this()
+    }
+
+    def this(age: Int){
+        this("lu", 5)
+        println("构造方法的调用必须在第一行")
+    }
+
+    @Test
+    def extendTest(): Unit ={
+        // TODO 子类继承了父类的所有成员, 但是 private 是一种访问权限, 继承了但是不能访问 ???
+        val fatherClass = new ClassMember()
+        val classMember = new ClassMember()
+        fatherClass.commonMethod()
+        classMember.commonMethod()
+    }
+
     @Test
     def constructTest(): Unit ={
-        // java1： 当并没有给定构造函数时，java 虚拟机会默认提供一个公共的无参构造
+        // java1： 当并没有给定构造函数时，java 虚拟机会默认提供一个公共的无参构造, 各重载的构造函数之间没有强关联.
         // java2： 构造函数中调用其它构造函数时 使用 关键字 this(args list) 调用
         // java3： java 中无论是构造函数还非静态成员函数，都注入了 this 关键字，来实现互相调用。
         // java4:  jvm 为 java中每个构造函数的第一行增加了 super(),来实现父类的初始化。
 
         // scala1：scala中构造函数分两大类 主构造方法 和 辅构造方法，
-        //         一定得提供主构造方法。而且辅助构造方法中必须调用主构造方法。
+        //         一定得提供主构造方法。而且辅助构造方法的调用链必须调用一次主构造方法。
         //         （PS）守护线程为用户线程服务，守护线程不能独立用户线程运行
         // scala2：scala 是完全面向函数编程的语言，所以类也是函数，通过简化如下函数的定义，
-        //          def Test(): String = {}，并将关键字def换为class，就可以简化为一个最简单的类。
+        //         def Test(): String = {}，并将关键字def换为class，就可以简化为一个最简单的类。
+        //         1- 无明确返回类型 2-可以类型推断 3-无参
+        // scala3: 类所代表的函数就是类的构造函数, 显然,默认是无参构造, 而类体{} 就是构造方法体,而该构造方法就是该类的主构造方法.
+        // scala4: 在主构造方法的方法体(构造体)中使用关键字 this 生命的构造方法就是辅助构造方法,
+        //         辅构造方法的参数列表不能与主构造方法相同,因为重复定义了.
+        // scala5: 辅构造方法的定义需要遵循被调用的辅构造方法先声明的原则.
         //
 
+        val classMember1 = new ClassMember()                // 函数式编程
+        val classMember2 = new ClassMember("lu")
     }
 
     @Test
@@ -140,6 +191,7 @@ class ClassMember {
     def methodTest(): Unit ={
         // 所谓方法就是 定义在类中的函数, 但是在调用方式上与函数有一定的区别
         // 因为作用域不同，方法必须通过类的实例进行调用，
+        // 方法转为函数的方式: 1-通过 _ 2-作为函数参数
         // NOTE scala 作为一种多范式变成语言,可以糅合多种编码风格来实现功能.
     }
 
