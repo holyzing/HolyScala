@@ -65,11 +65,14 @@ abstract class FatherClass{
 }
 
 
+// 私有化构造器，但是对于主 object 不是私有的
+
 class ClassMember(name: String) extends FatherClass {
     var username: String = _    // 底层编译为 private, 提供公有的 getter 和 setter 方法
     private var age: Int = _    // 底层编译为 private, 提供私有的 getter 和 setter 方法
+    private[this] var age2: Int = _ // TODO 只能被 this 访问 ??????????????????????????????????????
 
-    // val email: String = _    // 不能默认初始化
+    // val email: String = _    // val 不能默认初始化
     val email: String = "lu"    // “类中”声明底层编译增加 final 修饰符, 只提供了getter方法 email
 
     // NOTE salca 所谓的 getter 和 setter 是不符合 java 大多数框架（El表达式，SSM）中 基于反射
@@ -79,13 +82,14 @@ class ClassMember(name: String) extends FatherClass {
     @beanSetter var bean2: String = _
     @BeanProperty var bean3: String = _
 
-    println("NOTE 构造方法体语句可直接在类体中编写")
+    println("NOTE 主构造方法体语句直接在类体中编写, 构造方法体中定义的成员都是类成员", name)
 
     override def abstractMethod(): Unit = {  // override 可以省略
         println("实现抽象父类的抽象方法!")
     }
 
-    override def commonMethod(): Unit = {    // override 不可以省略, java 中 override 注解可以省略
+    override def commonMethod(): Unit = {
+        // override 不可以省略, java 中 override 注解可以省略
         // super.commonMethod()
         println("重写抽象父类的普通方法")
 
@@ -97,21 +101,40 @@ class ClassMember(name: String) extends FatherClass {
     }
 
     def this(name: String, age: Int){
-        this()
+        this(name)
+        println(s"name:$name age:$age")
     }
 
     def this(age: Int){
-        this("lu", 5)
+        this("lu", age)
         println("构造方法的调用必须在第一行")
     }
 
     @Test
     def extendTest(): Unit ={
-        // TODO 子类继承了父类的所有成员, 但是 private 是一种访问权限, 继承了但是不能访问 ???
-        val fatherClass = new ClassMember()
-        val classMember = new ClassMember()
-        fatherClass.commonMethod()
-        classMember.commonMethod()
+        // TODO 子类继承了父类的所有成员 (除了构造器), 但是 其 private 修饰的成员不能在" 子类" 中直接访问
+        // TODO 子类不能重写父类的私有方法,子类重写父类的非私有方法时,方法访问权限必须大于父类中的访问权限.
+        // THINK 在子类被创建的时候，首先会在内存中创建一个父类对象，然后在父类的外部加上子类独有的属性和方法，
+        // THINK 两者共同组成了子类的一个对象, 在创建子类对象时，首先要调用父类的构造器.
+
+        val fatherRef = new ClassMember()
+        val sonRef = new ClassMember()
+        fatherRef.commonMethod()
+        sonRef.commonMethod()
+        /**
+         * Java方法调用过程中，Jvm是如何知道调用的是哪个类的方法？Jvm又是如何处理？
+         *
+         * 静态绑定: 在编译阶段就已经在类的常量池中记录了 JVM要调用的方法具体在内存的什么位置上,
+         *         这种在编译阶段就能够确定调用哪个方法的方式，我们叫做静态绑定机制
+         *
+         * Java中只有private、static和final修饰的方法以及构造方法是静态绑定。
+         *      a、private方法的特点是不能被继承，也就是不存在调用其子类的对象，只能调用对象自身，因此private方法和定义该方法的类绑定在一起。
+         *      b、static方法又称类方法，类方法属于类文件。它不依赖对象而存在，在调用的时候就已经知道是哪个类的，所以是类方法是属于静态绑定。
+         *      c、final方法：final方法可以被继承，但是不能被重写，所以也就是说final方法是属于静态绑定的，因为调用的方法是一样的。
+         *      总结：如果一个方法不可被继承或者继承后不可被覆盖，那么这个方法就采用的静态绑定。
+         *
+         * 动态绑定: 在程序运行过程中，通过动态创建的对象的方法表来定位方法的方式，我们叫做 动态绑定机制 。
+         */
     }
 
     @Test
@@ -122,7 +145,7 @@ class ClassMember(name: String) extends FatherClass {
         // java4:  jvm 为 java中每个构造函数的第一行增加了 super(),来实现父类的初始化。
 
         // scala1：scala中构造函数分两大类 主构造方法 和 辅构造方法，
-        //         一定得提供主构造方法。而且辅助构造方法的调用链必须调用一次主构造方法。
+        //         一定得提供主构造方法。而且辅助构造方法的调用链必须调用且只能调用一次主构造方法。
         //         （PS）守护线程为用户线程服务，守护线程不能独立用户线程运行
         // scala2：scala 是完全面向函数编程的语言，所以类也是函数，通过简化如下函数的定义，
         //         def Test(): String = {}，并将关键字def换为class，就可以简化为一个最简单的类。
@@ -131,10 +154,6 @@ class ClassMember(name: String) extends FatherClass {
         // scala4: 在主构造方法的方法体(构造体)中使用关键字 this 生命的构造方法就是辅助构造方法,
         //         辅构造方法的参数列表不能与主构造方法相同,因为重复定义了.
         // scala5: 辅构造方法的定义需要遵循被调用的辅构造方法先声明的原则.
-        //
-
-        val classMember1 = new ClassMember()                // 函数式编程
-        val classMember2 = new ClassMember("lu")
     }
 
     @Test
@@ -185,6 +204,16 @@ class ClassMember(name: String) extends FatherClass {
         // protected: 只能是子类访问,不能在同包中访问
         // friendly(package): 不提供关键字,需要采用特殊的语法结构, private[package] 指定的包下可以访问
         // private: 只能在本类中访问
+
+        /**
+         * public        ： default
+         * private       ： java 允许外部类访问内部类的私有成员，但是 scala在嵌套类情况下，外层类甚至不能访问被嵌套类的私有成员。
+         * protected     ： java 中的保护成员，除了定义了该成员的类的子类可以访问，同一个包里的其他类也可以进行访问。
+         *               ： scala 只允许保护成员在定义了该成员的的类的子类中被访问。
+         * friendly      ： java有 该限定符
+         * scope limit   ： Scala中，访问修饰符可以通过使用限定词强调 private|protected[package|class|singleton-instance]
+         *                  被修饰 结构 除了对[…]中的类或[…]中的包中的类及它们的伴生对像可见外，对其它所有类都是private。
+         */
     }
 
     @Test
@@ -206,4 +235,35 @@ class ClassMember(name: String) extends FatherClass {
         innerPackage.innerPackage.ssy()     // 内包的包对象如果不用包同名,则需要通过包名调用
         innerPackage.innerPackage2.ssy()    // 子包不需要导入
     }
+
+    // 伴生类 中 定义 main 方法，会覆盖 object 的 main 方法，执行 object 中的main 方法 会出现 main 未定义的错误
+    // THINK 函数的返回类型不是函数签名的一部分 ??????????????
 }
+
+/**
+ *
+ *  类是对象的抽象，而对象是类的具体实例。类是抽象的，不占用内存，而对象是具体的，占用存储空间。
+ *  类是用于创建对象的蓝图，它是一个定义包括在特定类型的对象中的方法和变量的软件模板。
+ *
+ *  Scala 的类定义可以有参数，称为类参数，类参数在整个类中都可以访问。
+ *
+ *   1、重写一个非抽象方法必须使用override修饰符。
+ *   2、只有主构造函数才可以往基类的构造函数里写参数。
+ *   3、在子类中重写超类的抽象方法时，你不需要使用override关键字。
+ *   4、Scala 只允许继承一个父类。
+
+ *   Scala 中使用单例模式时，除了定义的类之外，还要定义一个同名的 object 对象，它和类的区别是，object对象不能带参数。
+ *   当单例对象与某个类共享同一个名称时，他被称作是这个类的伴生对象：companion object。
+ *   必须在同一个源文件里定义类和它的伴生对象。类被称为是这个单例对象的伴生类：companion class。类和它的伴生对象可以互相访问其私有成员。
+ */
+
+
+/**
+ *
+ * java 中外部类不能是静态的，只有内部类才可以是静态的，内部静态类作为外部类的成员可以被直接访问。
+ *
+ * 声明一个未用priavate修饰的字段 var age，scala编译器会字段帮我们生产一个私有字段和2个公有方法get和set,
+ * 这和C#的简易属性类似； 若使用了private修饰，则它的方法也将会是私有的。这就是所谓的统一访问原则。
+ *
+ * object 的成员在被虚拟机加载的时候会被初始化
+ */
