@@ -59,21 +59,35 @@ abstract class FatherClass{
     // 抽象方法不需要使用 abstract 声明, 抽象类不能实例化
     def abstractMethod()
 
+    // 存在抽象的属性，则类必须是抽象类
+    // 抽象属性在编译为字节码的时候不会生成类属性，只是生成了一个抽象的 gettter 方法
+    var gender: String
+
+    var lover: String = ""
+
+    val email:String = ""
+
     def commonMethod(): Unit ={
         println("抽象类的普通方法")
     }
 }
 
 
-// 私有化构造器，但是对于主 object 不是私有的
-
+// private // 私有化构造器，但是对于主 object 不是私有的
 class ClassMember(name: String) extends FatherClass {
-    var username: String = _    // 底层编译为 private, 提供公有的 getter 和 setter 方法
-    private var age: Int = _    // 底层编译为 private, 提供私有的 getter 和 setter 方法
-    private[this] var age2: Int = _ // TODO 只能被 this 访问 ??????????????????????????????????????
+    override var gender: String = _  // 必须重写父类抽象的属性, 且override 可以省略，反编译后子类生成属性并重写getter方法。
+    // override var lover = ""       // 覆写父类普通属性，则必须得注解重写。但是var在编译时不会报错，运行时会报错
+                                     // variable lover cannot override a mutable variable
+    // NOTE 如果重写var 属性，由于动态绑定，以及 “统一访问原则”，（即当直接调用一个属性时，会默认调用他的get方法，
+    // NOTE 当给一个属性赋值是，会调用他的set方法），通过子类实例访问父类中调用了父类同名属性的方法，而始终访问的是子类属性，
+    // NOTE 这样父类的属性就失去了意义，所以不能重写 var 只能重写 val，因为 val 是不可变的，如果子类重写了这个 final 属性，
+    // NOTE 那么在业务角度上是理解的，因为 final属性声明之后无法修改，子类重写只是”需要自己定义而已“。
 
-    // val email: String = _    // val 不能默认初始化
-    val email: String = "lu"    // “类中”声明底层编译增加 final 修饰符, 只提供了getter方法 email
+    var username: String = _         // 底层编译为 private, 提供公有的 getter 和 setter 方法
+    private var age: Int = _         // 底层编译为 private, 提供私有的 getter 和 setter 方法
+    private[this] var age2: Int = _  // TODO 只能被 this 访问 ??????????????????????????????????????
+    // val email: String = _             // val 不能默认初始化，因为它是不可变的
+    override val email: String = "lu"    // “类中”声明底层编译增加 final 修饰符, 只提供了getter方法 email
 
     // NOTE salca 所谓的 getter 和 setter 是不符合 java 大多数框架（El表达式，SSM）中 基于反射
     // NOTE 操作 Bean的 getXxx 和 setXxx 方法复规范的，为了和契合 它们提供了注解生成 getset方法
@@ -82,7 +96,7 @@ class ClassMember(name: String) extends FatherClass {
     @beanSetter var bean2: String = _
     @BeanProperty var bean3: String = _
 
-    println("NOTE 主构造方法体语句直接在类体中编写, 构造方法体中定义的成员都是类成员", name)
+    println("NOTE 主构造方法体语句直接在类体中编写, 构造方法体中定义的成员都是类成员", name, age, age2)
 
     override def abstractMethod(): Unit = {  // override 可以省略
         println("实现抽象父类的抽象方法!")
@@ -116,6 +130,8 @@ class ClassMember(name: String) extends FatherClass {
         // TODO 子类不能重写父类的私有方法,子类重写父类的非私有方法时,方法访问权限必须大于父类中的访问权限.
         // THINK 在子类被创建的时候，首先会在内存中创建一个父类对象，然后在父类的外部加上子类独有的属性和方法，
         // THINK 两者共同组成了子类的一个对象, 在创建子类对象时，首先要调用父类的构造器.
+        // THINK 如果二者出现同名属性的的时候 可通过 this 和 super 进行区分调用，默认this可以省略。
+        // THINK 子类不能直接调用父类的 protected 的方法，需要子类重写之后，才能调用。
 
         val fatherRef = new ClassMember()
         val sonRef = new ClassMember()
@@ -134,7 +150,16 @@ class ClassMember(name: String) extends FatherClass {
          *      总结：如果一个方法不可被继承或者继承后不可被覆盖，那么这个方法就采用的静态绑定。
          *
          * 动态绑定: 在程序运行过程中，通过动态创建的对象的方法表来定位方法的方式，我们叫做 动态绑定机制 。
+         *          1-成员方法执行的过程中，JVM 会将执行的方法与调用对象的实际内存进行绑定
+         *          2-成员属性没有动态绑定机制，"在哪使用就在哪寻址"，也就是说属性没有重写的概念。
+         *          3-scala的语法结构上与java的上述问题表现不一致
          */
+
+        val nf = new FatherClass {
+            override def abstractMethod(): Unit = ???
+
+            override var gender: String = _
+        }
     }
 
     @Test
@@ -237,7 +262,6 @@ class ClassMember(name: String) extends FatherClass {
     }
 
     // 伴生类 中 定义 main 方法，会覆盖 object 的 main 方法，执行 object 中的main 方法 会出现 main 未定义的错误
-    // THINK 函数的返回类型不是函数签名的一部分 ??????????????
 }
 
 /**

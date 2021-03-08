@@ -1,6 +1,7 @@
 package com.holy.scaler
 
 import com.holy.test
+import com.holy.test.JavaTest
 import org.junit.Test
 
 /**
@@ -74,7 +75,7 @@ object ValVar {
 
 
 class ValVar {
-    @test.Test
+    @JavaTest
     def baseTest(): Unit = {
         val a: Double = 1.2e-10
         val b: Float = 1.2f
@@ -109,7 +110,7 @@ class ValVar {
         throw new Exception("没有一个正常的返回值")
     }
 
-    @test.Test
+    @JavaTest
     def identifier(): Unit ={
         // scala 支持各种特殊符号作为标识符，编译为字节码后，由符号对应的单词标识，
         //       但是当特殊符号（运算符）与其它一般字符连接使用时则编译器会报错，因为特殊符号可能会被当做操作符编译
