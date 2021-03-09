@@ -2,14 +2,14 @@ package com.holy.scaler
 
 object ClassMore {
 
-    case class Person(name: String, age: Int)
-
     def main(args: Array[String]): Unit = {
         val cm: ClassMore = new ClassMore()
-        val son: cm.Dog = new cm.Dog("lulu")
-        println(son.name)
+        val son: cm.Dog = new cm.Dog("lulu", 18)
+        println(son.name, son.gender)  // son.age
     }
 
+    // 使用了case关键字的类定义就是就是样例类(case classes)，样例类是种特殊的类，经过优化以用于模式匹配.
+    case class Person(name: String, age: Int)
     def matchTest(): Unit ={
         val x: Any = 2
         val res = x match {
@@ -24,7 +24,7 @@ object ClassMore {
             case 1 => "one"
             case "two" => 2
             case y: Int => s"scala.Int $y"   // 高级匹配
-            case _ => "any"              // default
+            case _ => "any"                  // default
         }
         println(anyMatch())  // 参数列表为 Any 的时候 可以不传 ？？？
 
@@ -49,6 +49,7 @@ class ClassMore {
      * scala-2: 类的主构造方法的参数列表在类的整个类体内都可以使用，但是脱离类体之外是不能访问的, 比如类的实例去访问。
      * scala-3: 为了让作用域如此之广的类参数能够被“保留”从而让类实例调用，scala 允许在声明参数时，
      *          加上var 或者 val 关键字，将其提升为类属性，甚至加访问权限修饰符限制其访问权限。
+     *          虽然参数都是 val 的，但是在声明类参数时加 val 会将类参数提升为类实例属性。
      *
      */
     class Animal(animalClass: String){
@@ -57,47 +58,19 @@ class ClassMore {
         // def this(animalClass: String){this(animalClass); println("父类辅助构造方法代码")}
     }
 
-    class Dog(var name: String) extends Animal(name){    // 可从主构造方法的参数列表传入参数到父类主构造方法,也可以传递一个常量
+    class Dog(var name: String, age: Int, val gender: String = "male") extends Animal(name){    // 可从主构造方法的参数列表传入参数到父类主构造方法,也可以传递一个常量
         println("子类主构造方法代码块 ", s"name: $name")
-        private[this] var age: Int = _                   // TODO 这种修饰的作用是？
-
-        def this(age: Int)={
-            this("lulu")
-            println("辅助构造方法调用主构造方法 ", s"age: $age")
+        private[this] var defaultAge: Int = _                   // TODO 这种修饰的作用是？
+        if (age != 0){
+            defaultAge = age
         }
 
-        def this(name: String, age: Int)={
-            this(name)
-            this.age = age
-            println("辅助构造方法调用主构造方法 ", s"name: $name age: $age")
+        name = "defaultName"
+        // NOTE age = 0 ERROR: Reassignment to val
+
+        def this(age: Int)={
+            this("lulu", age)
+            println("辅助构造方法调用主构造方法 ", s"age: $age")
         }
     }
 }
-
-
-/**
- * Scala Trait(特征) 相当于 Java 的接口，但是比接口的功能强大，可以定义属性(java8也可以)以及方法的实现。
- * 一般情况下Scala的类只能够继承单一父类，但是同 java 的 interface 一样可以继承多个Trait，也就是实现了多继承。
- *
- *  Scala Trait(特征)更像 Java 的抽象类
- *
- * 特征也可以有构造器，由字段的初始化和其他特征体中的语句构成。这些语句在任何混入该特征的对象在构造时都会被执行。
- *
- * 构造器的执行顺序：
- *     调用超类的构造器；
- *     特征构造器在超类构造器之后、类构造器之前执行；
- *     特征由左到右被构造；
- *     每个特征当中，父特征先被构造；
- *     如果多个特征共有一个父特征，父特征不会被重复构造
- *     所有特征被构造完毕，子类被构造。
- * 构造器的顺序是类的线性化的反向。线性化是描述某个类型的所有超类型的一种技术规格。
- */
-
-// 使用了case关键字的类定义就是就是样例类(case classes)，样例类是种特殊的类，经过优化以用于模式匹配.
-
-/**
- * 构造器的每个参数都成为val，除非显式被声明为var，但是并不推荐这么做；
- * 在伴生对象中提供了apply方法，所以可以不使用new关键字就可构建对象；
- * 提供unapply方法使模式匹配可以工作；
- * 生成toString、equals、hashCode和copy方法，除非显示给出这些方法的定义。
- */
