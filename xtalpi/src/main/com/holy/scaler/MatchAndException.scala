@@ -75,3 +75,38 @@ object MatchAndException {
          */
     }
 }
+
+class MatchAndException{
+    // 使用了case关键字的类定义就是就是样例类(case classes)，样例类是种特殊的类，经过优化以用于模式匹配.
+    case class Person(name: String, age: Int)
+    def matchTest(): Unit ={
+        val x: Any = 2
+        val res = x match {
+            case 0 | "" => false
+            case 2 | 4 | 6 | 8 | 10 => println("偶数")
+            case x if x == 2 || x == 3 => println("two's company, three's a crowd")
+        }
+        println(res)
+
+        def anyMatch(x: Any): Any = x match {
+            // match 表达式通过以代码编写的先后次序尝试每个模式来完成计算，只要发现有一个匹配的case，剩下的case不会继续匹配
+            case 1 => "one"
+            case "two" => 2
+            case y: Int => s"scala.Int $y"   // 高级匹配
+            case _ => "any"                  // default
+        }
+        println(anyMatch())  // 参数列表为 Any 的时候 可以不传 ？？？
+
+        val alice = Person("Alice", 25)
+        val bob = Person("Bob", 32)
+        val charlie = Person("Charlie", 32)
+
+        for (person <- List(alice, bob, charlie)) {
+            person match {
+                case Person("Alice", 25) => println("Hi Alice!")
+                case Person("Bob", 32)   => println("Hi Bob!")
+                case Person(name, age)   => println("Age: " + age + " year, name: " + name + "?")
+            }
+        }
+    }
+}

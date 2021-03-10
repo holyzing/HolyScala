@@ -1,5 +1,8 @@
 package com.holy.scaler
 
+import scala.beans.BeanProperty
+
+
 object ClassMore {
 
     def main(args: Array[String]): Unit = {
@@ -8,48 +11,39 @@ object ClassMore {
         println(son.name, son.gender)  // son.age
     }
 
-    // 使用了case关键字的类定义就是就是样例类(case classes)，样例类是种特殊的类，经过优化以用于模式匹配.
-    case class Person(name: String, age: Int)
-    def matchTest(): Unit ={
-        val x: Any = 2
-        val res = x match {
-            case 0 | "" => false
-            case 2 | 4 | 6 | 8 | 10 => println("偶数")
-            case x if x == 2 || x == 3 => println("two's company, three's a crowd")
-        }
-        println(res)
+    object AppTest extends App{
+        println("App is a trait !")
+    }
 
-        def anyMatch(x: Any): Any = x match {
-            // match 表达式通过以代码编写的先后次序尝试每个模式来完成计算，只要发现有一个匹配的case，剩下的case不会继续匹配
-            case 1 => "one"
-            case "two" => 2
-            case y: Int => s"scala.Int $y"   // 高级匹配
-            case _ => "any"                  // default
-        }
-        println(anyMatch())  // 参数列表为 Any 的时候 可以不传 ？？？
-
-        val alice = Person("Alice", 25)
-        val bob = Person("Bob", 32)
-        val charlie = Person("Charlie", 32)
-
-        for (person <- List(alice, bob, charlie)) {
-            person match {
-                case Person("Alice", 25) => println("Hi Alice!")
-                case Person("Bob", 32)   => println("Hi Bob!")
-                case Person(name, age)   => println("Age: " + age + " year, name: " + name + "?")
-            }
-        }
+    class EnumerTest extends Enumeration{
+        // 没有太大的意义,枚举的完吗 ???
+        var RED: Value = Value(1, "啊")
+        var YELLO: Value = Value(2, "a")
     }
 }
 
-class ClassMore {
+class ClassMore private{        // 私有的无参主构造方法, 伴生对象可以调用
+
+    @BeanProperty var gender: String = _
+
+    private def this (name: String){
+        this()  // () 可以省略
+        println(name)
+    }
+
+    def this(name: String, age: Int = 18){
+        this(name)
+        println(age)
+    }
+
     /**
      * java-1: java 的子类构造函数默认在第一行都会执行 super(args) 以实现调用父类构造函数从而实现父类对象的构造。
      * scala-1: 伴生对象中定义的类是内部静态类 ？？？？
      * scala-2: 类的主构造方法的参数列表在类的整个类体内都可以使用，但是脱离类体之外是不能访问的, 比如类的实例去访问。
      * scala-3: 为了让作用域如此之广的类参数能够被“保留”从而让类实例调用，scala 允许在声明参数时，
      *          加上var 或者 val 关键字，将其提升为类属性，甚至加访问权限修饰符限制其访问权限。
-     *          虽然参数都是 val 的，但是在声明类参数时加 val 会将类参数提升为类实例属性。
+     *          虽然参数都是 val 的，但是在声明类参数时加 val 会将类参数提升为类实例属性,通过类实例访问,
+     *          但是如果不加 var 和 val 则类实例是无法访问的.
      *
      */
     class Animal(animalClass: String){
@@ -58,7 +52,8 @@ class ClassMore {
         // def this(animalClass: String){this(animalClass); println("父类辅助构造方法代码")}
     }
 
-    class Dog(var name: String, age: Int, val gender: String = "male") extends Animal(name){    // 可从主构造方法的参数列表传入参数到父类主构造方法,也可以传递一个常量
+    // 可从主构造方法的参数列表传入参数到父类主构造方法,也可以传递一个常量
+    class Dog(var name: String, age: Int, val gender: String = "male") extends Animal(name){
         println("子类主构造方法代码块 ", s"name: $name")
         private[this] var defaultAge: Int = _                   // TODO 这种修饰的作用是？
         if (age != 0){
@@ -73,4 +68,23 @@ class ClassMore {
             println("辅助构造方法调用主构造方法 ", s"age: $age")
         }
     }
+
+    // -----------------------------------------------------------------------------------------------------------------
+
+
+    def classRemain(): Unit ={
+        val v = classOf[Dog]   // java 中获取一个类的 Meta 信息 Object.class object.getClass()
+        println(v.getInterfaces.length)
+        type Xxx = Dog         // NOTE 给类其别名, 给包其别名
+
+        // 比较对象是否相等 (HashTable)
+        // == 默认比较对象地址值的 HashCode
+        // THINK 重写 equals 和 hashcode  (重写 hashcode 的意义 ?????????)
+
+        val xxx = new Xxx(12)
+        xxx.isInstanceOf[Dog]   // 类型判断
+        xxx.asInstanceOf[Dog]   // 强制转换
+    }
+
+    // google 三大篇  (GFS, BIgTable, )
 }
