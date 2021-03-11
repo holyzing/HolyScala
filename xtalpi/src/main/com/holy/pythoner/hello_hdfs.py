@@ -1,22 +1,37 @@
 # -*- encoding: utf-8 -*-
 from __future__ import print_function
 
-import sys
-from operator import add
+from pyspark import SparkConf
 from pyspark.sql import SparkSession
-from pyspark import SparkConf, SparkContext
 
 from krbcontext import krbContext
-# from hdfs.client import InsecureClient
 from hdfs.ext.kerberos import KerberosClient
+from happybase_kerberos_patch import KerberosConnection
 
 
 def hdfs_connect_demo():
-    with krbContext(using_keytab=True, principal='houleilei@XTALPI-BJ.COM', keytab_file='../../resources/houleilei.client.keytab'):
+
+    # NOTE 底层会调用 kinit
+    with krbContext(
+            using_keytab=True, principal='houleilei@XTALPI-BJ.COM',
+            keytab_file='/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi/src/resources/houleilei.client.keytab'):
         client = KerberosClient('http://hadoop01.stor:50070', hostname_override='hadoop01.stor')
         # client = InsecureClient('http://hadoop01.stor:50070', user='houleilei')
         result = client.list('/home/holyzing/')
         print(type(result), result)
+
+
+def hbase_connect_demo():
+    with krbContext(
+            using_keytab=True, principal='houleilei@XTALPI-BJ.COM',
+            keytab_file='/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi/src/resources/houleilei.client.keytab'):
+
+        connection = KerberosConnection('hbase02.stor', protocol='compact', use_kerberos=True)
+        test_table = connection.table('houleilei:test')
+        # insert
+        test_table.put('row_key_1', {'f1:q1': 'v1'})
+        # get data
+        print(test_table.row('row_key_1'))
 
 
 def pyspark_api():
@@ -29,6 +44,7 @@ def pyspark_api():
     print(text_file.first(), text_file.count())
     line_with_insert = text_file.filter(text_file.value.contains("insert"))
     print(line_with_insert.count())
+
 
 """
     counts = lines.flatMap(lambda x: x.split(' ')).map(lambda x: (x, 1)).reduceByKey(add)
@@ -58,6 +74,9 @@ if __name__ == '__main__':
     #     print("%s: %i" % (word, count))
     # spark.stop()
 
-    hdfs_connect_demo()
-# 基于已经存在的 spark 和 hadoop 集群构建 hive
+    # hdfs_connect_demo()
+    hbase_connect_demo()
 
+    # 2.2.3
+
+# 基于已经存在的 spark 和 hadoop 集群构建 hive
