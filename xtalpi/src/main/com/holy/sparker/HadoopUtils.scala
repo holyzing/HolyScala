@@ -1,11 +1,9 @@
 package com.holy.sparker
 
 import org.apache.hadoop.security.UserGroupInformation
-import org.apache.spark.SparkContext
 import java.net.URLClassLoader
 
 import org.apache.hadoop.conf.Configuration
-import org.apache.spark
 
 object HadoopUtils {
     val os: String = System.getProperty("os.name")
@@ -33,7 +31,7 @@ object HadoopUtils {
     val hdfsHome = "hdfs://hadoop01.stor:8020/home/holyzing/"
 
     def setProperties(): Unit ={
-        System.setProperty("user.name", username);
+        System.setProperty("user.name", username)
         System.setProperty("HADOOP_USER_NAME", username)
         System.setProperty("java.security.krb5.conf", krb5ConfPath)
     }

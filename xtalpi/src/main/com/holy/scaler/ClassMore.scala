@@ -15,7 +15,7 @@ object ClassMore {
         println("App is a trait !")
     }
 
-    class EnumerTest extends Enumeration{
+    object EnumerTest extends Enumeration{
         // 没有太大的意义,枚举的完吗 ???
         var RED: Value = Value(1, "啊")
         var YELLO: Value = Value(2, "a")
@@ -84,6 +84,9 @@ class ClassMore private{        // 私有的无参主构造方法, 伴生对象�
         val xxx = new Xxx(12)
         xxx.isInstanceOf[Dog]   // 类型判断
         xxx.asInstanceOf[Dog]   // 强制转换
+
+        val `class` = ""
+        println(`class`.charAt('A'))
     }
 
     // google 三大篇  (GFS, BIgTable, )
