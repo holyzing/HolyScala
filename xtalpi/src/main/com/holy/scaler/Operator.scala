@@ -96,6 +96,8 @@ class Operator{
 
         val words1 = bigArr.map((_, 1))
         val words2 = bigArr.map(x => (x, 1))
+
+        // NOTE 字符串格式化
         println(words1.length, words2.length)
         println(s"name=${"lulu"}, age=${26}, gender=${'F'}")
         println(f"name=${"lulu"}, age=${26.0}%.2f, gender=${'F'}")

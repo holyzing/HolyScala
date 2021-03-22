@@ -6,6 +6,7 @@ import scala.beans.BeanProperty
 object ClassMore {
 
     def main(args: Array[String]): Unit = {
+        println(args.mkString("Array(", ", ", ")"))
         val cm: ClassMore = new ClassMore()
         val son: cm.Dog = new cm.Dog("lulu", 18)
         println(son.name, son.gender)  // son.age
@@ -73,8 +74,8 @@ class ClassMore private{        // 私有的无参主构造方法, 伴生对象�
 
 
     def classRemain(): Unit ={
-        val v = classOf[Dog]   // java 中获取一个类的 Meta 信息 Object.class object.getClass()
-        println(v.getInterfaces.length)
+        val dogClass = classOf[Dog]   // java 中获取一个类的 Meta 信息 Object.class object.getClass()
+        println(dogClass)
         type Xxx = Dog         // NOTE 给类其别名, 给包其别名
 
         // 比较对象是否相等 (HashTable)
@@ -89,5 +90,5 @@ class ClassMore private{        // 私有的无参主构造方法, 伴生对象�
         println(`class`.charAt('A'))
     }
 
-    // google 三大篇  (GFS, BIgTable, )
+    // google 三大篇  (GFS, BIgTable, MapReduce)
 }
