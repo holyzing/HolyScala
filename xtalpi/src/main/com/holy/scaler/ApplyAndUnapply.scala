@@ -7,29 +7,29 @@ package com.holy.scaler
  * unapply接受一个对象，然后从对象中提取值，提取的值通常是用来构造该对象的值。
  */
 
-object ExtractorTest {
+object ApplyAndUnapply {
     def main(args: Array[String]) {
 
-        println("通过静态构造调用apply 方法: " + ExtractorTest(user = "holy", domain = "@lixue"))
-        println("Apply 方法 : " + apply("Zara", "gmail.com"));
-        println("Unapply 方法 : " + unapply("Zara@gmail.com"));
-        println("Unapply 方法 : " + unapply("Zara Ali"));
+        println("通过静态构造调用apply 方法: " + ApplyAndUnapply(user = "holy", domain = "@lixue"))
+        println("Apply 方法 : " + apply("Zara", "gmail.com"))
+        println("Unapply 方法 : " + unapply("Zara@gmail.com"))
+        println("Unapply 方法 : " + unapply("Zara Ali"))
 
         println("---------------------------------------------")
 
-        val x = ExtractorTest(5)
+        val x = ApplyAndUnapply(5)
         println(x)
 
         x match
         {   //TODO unapply 被调用 ?????
-            case ExtractorTest(num) => println(x + " 是 " + num + " 的两倍！")
+            case ApplyAndUnapply(num) => println(x + " 是 " + num + " 的两倍！")
             case _ => println("无法计算")
         }
 
     }
 
     // 注入方法 (可选)
-    def apply(user: String, domain: String) = {  // 不需要 new 操作就可以 构造对象
+    def apply(user: String, domain: String): String = {  // 不需要 new 操作就可以 构造对象
         user + "@" + domain
     }
 
@@ -48,7 +48,7 @@ object ExtractorTest {
     }
 
     // 函数重载
-    def apply(x: Int) = x*2
+    def apply(x: Int): Int = x*2
 
     // None null Nothing, Nil
     def unapply(z: Int): Option[Int] = {

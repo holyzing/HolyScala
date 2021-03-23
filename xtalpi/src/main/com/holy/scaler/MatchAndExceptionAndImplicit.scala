@@ -2,6 +2,8 @@ package com.holy.scaler
 
 import java.io.{FileNotFoundException, FileReader, IOException}
 
+import org.junit.Test
+
 // Scala 抛出异常的方法和 Java一样，使用 throw 方法，例如，抛出一个新的参数异常：
 
 /**
@@ -10,7 +12,7 @@ import java.io.{FileNotFoundException, FileReader, IOException}
  * 如果抛出的异常不在catch字句中，该异常则无法处理，会被升级到调用者处。
  */
 
-object MatchAndException {
+object MatchAndExceptionAndImplicit {
     def main(args: Array[String]): Unit = {
         try {
             val f = new FileReader("input.txt")
@@ -76,7 +78,7 @@ object MatchAndException {
     }
 }
 
-class MatchAndException{
+class MatchAndExceptionAndImplicit{
     // 使用了case关键字的类定义就是就是样例类(case classes)，样例类是种特殊的类，经过优化以用于模式匹配.
     case class Person(name: String, age: Int)
     def matchTest(): Unit ={
@@ -108,5 +110,56 @@ class MatchAndException{
                 case Person(name, age)   => println("Age: " + age + " year, name: " + name + "?")
             }
         }
+    }
+
+    // ---------------------------------------------------------------------------------------
+    // scala 默认情况下支持的隐式转换
+    // 1-- 数值类型的类型提升 各个数值类型中都定义了它们的隐式转换
+    // 2-- 多态语法下的类型转换，具体转抽象，子类转父类等
+    // 3-- 当前环境下（作用域）不能出现多个相同签名（入参类型和返回类型一样）的隐式转换函数
+
+    @Test
+    def implicitTest(): Unit ={
+        // 隐式函数 底层是 private final
+        implicit def floatToInt(f: Float): Int ={f.toInt}
+        val i: Int = 5.0f   // OCP 对功能扩展开放，对修改源码关闭
+        println(i.toFloat)
+
+        class Mysql{def select(): Unit ={println("select func")}}
+        class Db{def delete(): Unit ={println("delete func")}}
+        implicit def transform(mysql: Mysql): Db = {new Db}
+        val mysql = new Mysql // 无参构造
+        mysql.select()
+        mysql.delete()        // THINK 找不到这个方法的时候就会隐式转换 ？？？？
+
+        def sayname(name:String = "张三"): Unit ={println(name)}
+        // sayname  // Missing arguments for method sayname(String)
+        sayname()
+
+        // implicit val age2: Int = 20  // ambiguous implicit val
+        implicit val age: Int = 20
+        // 隐式参数
+        def sayage(implicit age:Int = 18): Unit ={
+            println(age)
+        }
+        sayage      // 因为隐式参数，所以 () 可以省略
+        sayage()
+        sayage(19)
+
+        implicit class IO(mysql: Mysql){def drop(): Unit ={mysql.delete(); println("drop func")}}
+        mysql.drop()
+    }
+
+    @Test
+    def regexTest() {
+        import scala.util.matching.Regex
+        val pattern = "Scala".r()              // 构造 Regex 对象
+        val pattrer2 = new Regex("(S|s)cala")  // 管道(|)来设置不同的模式, 首字母可以是大写 S 或小写 s
+        val str = "Scala is Scalable and cool"
+        val str2 = "Scala is scalable and cool"
+        println(pattern findFirstIn str, (pattern findAllIn str2).mkString(","))   // 使用逗号 , 连接返回结果
+        println(pattrer2 replaceFirstIn(str, "Java"), pattern replaceAllIn(str2, "Java"))
+
+        // Scala 的正则表达式继承了 Java 的语法规则，Java 则大部分使用了 Perl 语言的规则
     }
 }
