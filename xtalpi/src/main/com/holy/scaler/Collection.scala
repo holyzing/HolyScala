@@ -31,13 +31,10 @@ class Collection{
 
     @Test
     def arrayTest(): Unit ={
-        // import java.lang.{String, StringBuffer, StringBuilder}
         printf("浮点数：%f 整形：%d 字符串：%s", 1.0, 1, "1")
-        // TODO println(String.format("浮点数：%f 整形：%d 字符串：%s", 2.0, 2, "2")) // 版本问题 ??
+        println(String.format("浮点数：%f 整形：%d 字符串：%s", 2.0, 2, "2"))
 
-        /**
-         * Scala 语言中提供的数组是用来存储固定大小的同类型元素.
-         */
+        // Scala 语言中提供的数组是用来存储固定大小的同类型元素.
         val scalaArr: Array[String] = new Array[String](5)
         // val javaArr = new String[]{} scala 中是无法定义java数组的, 不支持 java 语法
         // val applyArray: Array[Int] = Array(1, "a")  // 运行时错误
