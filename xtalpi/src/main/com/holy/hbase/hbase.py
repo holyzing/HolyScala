@@ -129,15 +129,15 @@ def spark_hbase():
     columns = ["project", "start_time", "end_time", "cpu", "gpu"] # "memory"
     columns = [f"{yz_pre}:%s" % column for column in columns]
 
-    # TODO 如何使用 filters ？？？ family 和 columns 参数是怎么用的 ？？？
     hbase_conf = {
         "hbase.zookeeper.quorum": cm_quorum,
         "hbase.mapreduce.inputtable": cm_table,
         # "hbase.mapreduce.scan.row.start": '_',
         # "hbase.mapreduce.scan.row.stop": '_',
         # "hbase.mapreduce.scan.column.family": "info",
-        # 没有配置 family 则 columns 只能选取一列
-        "hbase.mapreduce.scan.columns": "infos:project" # " ".join(columns)
+        # TODO columns 只能选取一列？ 缺省后也不是选取全部列，family 如何 配置 ？？？？
+        # TODO 这么多配置项中似乎没有配置 过滤器的选项 ？？？？
+        "hbase.mapreduce.scan.columns": "infos:project"  # " ".join(columns)
     }
 
     # 在 cluster mode 下，Executor 中应该也需要这两个 类
