@@ -13,4 +13,4 @@ hdfs-site.xml
 spark-warehouse/
 metastore_db/
 xtalpi/src/resources/
-
+*.jar
