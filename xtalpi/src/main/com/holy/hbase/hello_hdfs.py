@@ -14,7 +14,7 @@ def hdfs_connect_demo():
     # NOTE 底层会调用 kinit
     with krbContext(
             using_keytab=True, principal='houleilei@XTALPI-BJ.COM',
-            keytab_file='/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi/src/resources/houleilei.client.keytab'):
+            keytab_file='/houleilei.client.keytab'):
         client = KerberosClient('http://hadoop01.stor:50070', hostname_override='hadoop01.stor')
         # client = InsecureClient('http://hadoop01.stor:50070', user='houleilei')
         result = client.list('/home/holyzing/')
@@ -24,7 +24,7 @@ def hdfs_connect_demo():
 def hbase_connect_demo():
     with krbContext(
             using_keytab=True, principal='houleilei@XTALPI-BJ.COM',
-            keytab_file='/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi/src/resources/houleilei.client.keytab'):
+            keytab_file='/houleilei.client.keytab'):
 
         connection = KerberosConnection('hbase02.stor', protocol='compact', use_kerberos=True)
         test_table = connection.table('houleilei:test')
