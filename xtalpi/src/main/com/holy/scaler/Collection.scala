@@ -32,7 +32,7 @@ class Collection{
     @Test
     def arrayTest(): Unit ={
         printf("浮点数：%f 整形：%d 字符串：%s", 1.0, 1, "1")
-        println(String.format("浮点数：%f 整形：%d 字符串：%s", 2.0, 2, "2"))
+        // println(String.format("浮点数：%f 整形：%d 字符串：%s", 2.0f, 2, "2"))
 
         // Scala 语言中提供的数组是用来存储固定大小的同类型元素.
         val scalaArr: Array[String] = new Array[String](5)
