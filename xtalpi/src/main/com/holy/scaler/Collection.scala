@@ -30,27 +30,9 @@ class Collection {
         // println(String.format("浮点数：%f 整形：%d 字符串：%s", 2.0f, 2, "2"))
 
         // Scala 语言中提供的数组是用来存储固定大小的同类型元素.
-        val scalaArr: Array[String] = new Array[String](5)
-        // val javaArr = new String[]{} scala 中是无法定义java数组的, 不支持 java 语法
-        // val applyArray: Array[Int] = Array(1, "a")  // 运行时错误
-        val applyArray: Array[Int] = Array(1, 4, 2)
-        println(applyArray(1))
-
-        var total = 0.0
-        for (e <- applyArray){
-            total += e
-        }
-        var max = applyArray(0)
-        for (i <- 1 until applyArray.length){ // i <- 1 to applyArray.length - 1
-            if (applyArray(i) > max){
-                max = applyArray(i)
-            }
-        }
-        println(total, max)
-
         val multiDimArr = Array.ofDim[Int](3,2)
-        val oneDimArr = Array.ofDim[Int](1,6)
-        println(oneDimArr.length)
+        val twoDimArr = Array.ofDim[Int](1,6)
+        println(twoDimArr.length)
         for (i <- multiDimArr){
             for (j <- i){
                 // oneDimArr.appended(j) // 运行时错误 ？？？？
@@ -61,19 +43,9 @@ class Collection {
         val rangeArr1 = Array.range(1,10)
         val rangeArr2 = Array.range(2, 5, 2)
         val concatArr = Array.concat(rangeArr1, rangeArr2)
-        println(concatArr.repr.mkString("Array(", ", ", ")"))
+        println(concatArr.indices)
 
-        /**
-         * 可变集合：
-         *      Array
-         *      List  - 线性方式存储，元素可重复
-         *      Set   - 无需存储，元素不可重复 hashcode 不能重复
-         *      Map   - 键是一个集合，值是一个列表
-         * 不可变集合：Tuple
-         * Iterator  Option
-         * Seq
-         */
-        val typeNone = None       // object None extend object Option
+        val typeNone = None      // object None extend object Option
         val typeSome = Some      // object Some extend object Option
         val typeOption = Option  // object Option
         val keyNull = null       // keyword
@@ -94,14 +66,6 @@ class Collection {
 
         println(showCapital(capitals.get("not exist")))
 
-        for (i <- scalaArr.indices){  // def indices: Range = 0 until length
-            scalaArr(i) = i.toString
-        }
-        println(scalaArr.repr.mkString("Array(", ", ", ")"))
-        val mapArr = scalaArr.map(_*2).map(_+2)
-        println(mapArr.repr.mkString("Array(", ", ", ")"))
-        mapArr.foreach(println)
-
         val optionSome1: Some[Int] = Some(5)
         val optionNone1: Option[Nothing] = None     // does not take parameters
         val optionSome2: Option[Int] = Option(5)
@@ -113,8 +77,9 @@ class Collection {
     @Test
     def arrayMore(): Unit = {
         val arr = new Array[String](3)
-        val arr2 = Array("a")
         arr(1) = "a"
+
+        val arr2 = Array("a")
         // println(arr2.length, arr2.mkString(", "), arr2.+("a"), arr2 + "b")
         for (item <- arr2) {println(item)}
         arr2.foreach((str: String) => {println(str)})
@@ -124,18 +89,26 @@ class Collection {
         arr2.foreach(println)
 
         // JAVACODE: final String strs[] = new String[5]; strs 引用的地址不可改变
-        arr2.update(1, "b")
+        arr2.update(0, "b")
         val arr3: Array[String] = arr2 :+ "c"
         arr3.foreach(println)
         ("a" :+ arr2).foreach(println)
-        val ar: ArrayBuffer[Int] = ArrayBuffer(1, 2, 3)
+        val ar: ArrayBuffer[String] = ArrayBuffer("1", "2", "3")
 
-        ar += 4
-        ar.insert(1, 3)
+        ar += "4"
+        ar.insert(1, "4")
         ar.remove(2)
         ar.remove(1, 2)
         arr2.toBuffer
         ar.toArray
+
+
+        // 与 java 之间互转
+        import scala.collection.JavaConverters.{bufferAsJavaList, asScalaBuffer}
+
+        val javaList = bufferAsJavaList(ar)
+        println(javaList)
+        println(asScalaBuffer(javaList))
     }
 
     @Test
@@ -192,6 +165,18 @@ class Collection {
         val q: mutable.Queue[Int] = mutable.Queue(1, 2, 3, 4)
         q.enqueue(5)
         print(q.dequeue())
+
+        /**
+         * Kafka 双端队列
+         * kafka 能保证一个分区内的有序性，但不能保证多个分区之间数据的有序性
+         * 生产者发送数据可能存在失败问题，失败后为了保证数据顺序，只能在返回原队列位置，
+         * 所谓双端就是头尾均可取数据，插入数据
+         *
+         * 阻塞式队列
+         * 从队列中取数据的时候队列里没数据，形成阻塞，直到队列被插入数据
+         * 往队列中插数据的时候队列里是满的，形成阻塞，直到队列被取走数据
+         *
+         */
     }
 
     @Test
@@ -340,28 +325,56 @@ class Collection {
         println(c.map((_, 1)).groupBy(_._1).map(t=>{(t._1, t._2.size)}).mkString(","))
 
         // 扁平化
+        // val l: List[Any] = List(1, List(2, 3), 4, List(5))
+        // val list: List[Int] = l.flatMap(any => {
+        //     if (any.isInstanceOf[List[Int]]) {
+        //         any.asInstanceOf[List[Int]]
+        //     } else {
+        //         List(any.asInstanceOf[Int])
+        //     }
+        // })
         println(s.flatMap(x =>{x.toCharArray}))
 
         // 过滤
         println(c.filter(_ % 2 == 1))
 
         // 拉链 (python 中也有)
-        println(List(1, 2, 3).zip(Array(1, 2, 3)))
-        println(List(1, 2, 3).zip(Array(1, 2, 3)).unzip)
+
+        val list123 = List(1, 2, 3)
+        println(list123.zip(Array(1, 2, 3)))
+        println(list123.zip(Array(1, 2, 3)).unzip)
 
         // 联合
-        println(List(1, 2, 3).union(Array(1, 2, 3)))
+        println(list123.union(Array(1, 2, 3)))
 
         // 相交
-        println(List(1, 2, 3).intersect(Array(1, 2, 4)))
+        println(list123.intersect(Array(1, 2, 4)))
 
         // 相减  // 对称相减
-        println(List(1, 2, 3).diff(Array(1, 2, 4)))
+        println(list123.diff(Array(1, 2, 4)))
 
         // 化解 归约 降维
+        println(list123.reduceLeft(_ - _))  // 左元素 减去 右元素
+        println(list123.reduceRight(_ - _)) // 翻转列表 右元素 减去 左元素
+        println(list123.reduce(_ - _))
 
+        // 折叠 扫描（集合的元素往额外的一个元素上折叠）
+        println(list123.fold(10)(_ - _))
+        println(list123.foldLeft(10)(_ - _))
+        println(list123.foldRight(10)(_ - _))
+        println(list123.scanLeft(10)(_ - _))
+        println(list123.scanRight(10)(_ - _))
 
-        // 折叠
+        // python update 操作
+        val map1 = mutable.Map(("a", 1), ("b", 2), ("c", 3))
+        val map2 = mutable.Map("a" -> 3, "c" -> 2, "d" -> 1)
+        val map3 = map1.foldLeft(map2)((map, t) => {
+            val v = map.getOrElse(t._1, 0)
+            map(t._1) = v + t._2
+            println(map == map2)
+            map
+        })
+        println(map3, map3 == map2)
     }
 
     def scalaIO(): Unit ={
@@ -369,5 +382,22 @@ class Collection {
         val source = Source.fromFile("")
         source.getLines().toList
         source.close()
+    }
+
+    /**
+     * 线程安全： JVC ThreadPool Executor
+     * 低版本会存在一些 以 Synchronized开头的集合
+     * 低版本这些集合都不可用了
+     *
+     * java 的线程不是原生线程
+     *
+     * TODO java 的线程和 python 的线程有何区别 ？？？？？
+     *
+     * 多核并行集合 （单核并发）
+     */
+    @Test
+    def parallelTest(): Unit ={
+        println((0 to 10).map(_ => Thread.currentThread().getName))
+        println((0 to 10).par.map(_ => Thread.currentThread().getName))
     }
 }
