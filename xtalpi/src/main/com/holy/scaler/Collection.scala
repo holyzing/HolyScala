@@ -2,6 +2,9 @@ package com.holy.scaler
 
 import org.junit.Test
 
+import scala.collection.mutable
+import scala.collection.mutable.ListBuffer
+import scala.collection.mutable.ArrayBuffer
 
 /**
  * 在 Scala 中，字符串的类型实际上是 Java String，它本身没有 String 类。
@@ -13,26 +16,18 @@ import org.junit.Test
  * python 的变量则完完全全是由 变量引用的值决定的。这也造成了两种语言 垃圾回收机制的完全不同。
  *
  * 在ubuntu 中使用 idea ，fctix类型的输入法不能跟随光标。
+ *
+ * JAVA 中 length 是 数组的属性 length() 是字符串的方法, size() 是集合的方法
+ * Replace .size with .length on arrays and strings
+ * scala 中 immutable 使用 length，而 mutable 使用 size
  */
 
-object Collection{
-    /**
-     * TODO scala 中哪些函数对应 python 中 的 map filter reduce 函数 ？
-     * TODO Any 和 AnyRef 的区别
-     * TODO new Class() 和 Class() 的区别
-     * JAVA 中 length 是 数组的属性 length() 是字符串的方法, size() 是集合的方法
-     * Replace .size with .length on arrays and strings
-     * immutable 使用 length mutable 使用 size
-     */
-}
-
-// ctrl (shift) +/-
-class Collection{
+class Collection {
 
     @Test
-    def arrayTest(): Unit ={
+    def arrayBase(): Unit ={
         printf("浮点数：%f 整形：%d 字符串：%s", 1.0, 1, "1")
-        println(String.format("浮点数：%f 整形：%d 字符串：%s", 2.0, 2, "2"))
+        // println(String.format("浮点数：%f 整形：%d 字符串：%s", 2.0f, 2, "2"))
 
         // Scala 语言中提供的数组是用来存储固定大小的同类型元素.
         val scalaArr: Array[String] = new Array[String](5)
@@ -116,57 +111,87 @@ class Collection{
     }
 
     @Test
-    def listTest(): Unit ={
-        // Scala 列表类似于数组，它们所有元素的类型都相同，长度固定  TODO Tuple ？？   (immutable recursive data)
-        // 但是它们也有所不同：列表是不可变的，值一旦被定义了就不能改变，其次列表 具有递归的结构（也就是链接表结构）而数组不是。。
-        val site1: List[String] = List("Runoob", "Google", "Baidu")
-        val nothingList: List[Nothing] = List()  // keyword Nothing
-        val doubleDimList: List[List[Int]] = List(List(1, 2, 3), List(4, 5, 6), List(7, 8, 9))
-        println(nothingList.length, doubleDimList.length)
+    def arrayMore(): Unit = {
+        val arr = new Array[String](3)
+        val arr2 = Array("a")
+        arr(1) = "a"
+        // println(arr2.length, arr2.mkString(", "), arr2.+("a"), arr2 + "b")
+        for (item <- arr2) {println(item)}
+        arr2.foreach((str: String) => {println(str)})
+        arr2.foreach(str=> {println(str)})
+        arr2.foreach({println(_)})
+        arr2.foreach(println(_))
+        arr2.foreach(println)
 
-        val site2 = "Runoob" :: ("Google" :: ("Baidu" :: Nil))
-        val nums = 1 :: (2 :: (3 :: (4 :: Nil)))
-        val empty = Nil
+        // JAVACODE: final String strs[] = new String[5]; strs 引用的地址不可改变
+        arr2.update(1, "b")
+        val arr3: Array[String] = arr2 :+ "c"
+        arr3.foreach(println)
+        ("a" :+ arr2).foreach(println)
+        val ar: ArrayBuffer[Int] = ArrayBuffer(1, 2, 3)
+
+        ar += 4
+        ar.insert(1, 3)
+        ar.remove(2)
+        ar.remove(1, 2)
+        arr2.toBuffer
+        ar.toArray
+    }
+
+    @Test
+    def seqTest(): Unit ={
+        // JAVA: LinkedList ArrayList
+        // 不可变 List （大小不可变）
+        val l: List[Int] = List(1,2,3,4)
+        // 索引，访问
+        println(l(1), l.head, l.tail, l.last, l.mkString(","))
+        // 单个元素扩展
+        println((l :+ 5).mkString(","), "\n", (5 +: l).mkString(","), "\n", l.+:(0).mkString(","))
+        println(l.::(5).mkString(","), "\n", (-1 :: 0 :: l).mkString(","))
+        // 多个元素扩展
+        println(l ++ List(4, 5, 6),  "\n", l ++ Array(4, 5, 6))
+        println(0 :: l ::: List(4, 5, 6))
+        // 空集合扩充
+        println(Nil, List(), -1 :: 0 ::Nil, List(1, 2) ::: Nil)
+
+        // 更新 返回新列表
+        println(l.updated(2, 0) == l)
+        // TODO 索引位无法赋值 ??? 大小不可变 索引位的值也不可变？？？
+        //      error: value update is not a member of List[Int]
+        // l(0) = -1
+        // 移除数据 从前往后 drop
+        println(l.drop(2).mkString(","))
+
+        println("-------------------------------------------------------------------")
+        // 可变集合
+        val lb: ListBuffer[Int] = ListBuffer(2, 3, 4, 5)
+        println(lb.head, lb.init, lb.tail, lb.last)
+        println(lb.head, lb.init(2), lb.tail(2), lb.last)
+
+        // Scala 不可变列表 （immutable recursive data）类似于数组，它们所有元素的类型都相同，长度固定
+        // 但是它们也有所不同：列表是不可变的，值一旦被定义了就不能改变，其次列表 具有递归的结构（也就是链接表结构）而数组不是。。
 
         // 二维列表
-        val dim = (1 :: (0 :: (0 :: Nil))) ::
+        val dim = (1 :: (0 :: (0 :: Nil))) ::  // ::: 等价 list.concat
             (0 :: (1 :: (0 :: Nil))) ::
             (0 :: (0 :: (1 :: Nil))) :: Nil
-        println(site2, "\n", site2.length, nums.length, "\n", empty, "\n", dim)
-        println(site1.head, empty.isEmpty, nums.tail)
 
-        // ::: List.::: List.concat
-
-        val list1 = "A"::("B":: "C" :: Nil)
-        val list2 = List("D", "E", "F")
-        val list3 = list1 ::: list2
-        val list4 = list1.:::(list2)
-        val list5 = List.concat(list1, list2)
-        println(list3, "\n", list4, "\n", list5)
+        val squares = List.tabulate(6)(f=n => n * n) // for (i <- 0 until(6)) { fun(i) }
+        val mul = List.tabulate(4, 5)(_ * _)
+        println(dim, squares, mul)
 
         val list6 = List.fill(3)("strEle")  // 重读 0
         val list7 = List.fill(3)(2)
         println(list6, "\n", list7)
 
-        println("--------------------------------")
-        val squares = List.tabulate(6)(f=n => n * n) // for (i <- 0 until(6)) { fun(i) }
-        val mul = List.tabulate(4, 5)(_ * _)
 
-        var listCon:List[Int] = null
-        for (i <- 0 until 4; j <- 0 until 5){
-            if (listCon == null){
-                listCon = (i*j) :: empty
-                println(listCon.hashCode())
-            }
-            listCon = (i*j) :: listCon
-            // print(newLi.hashCode() == empty.hashCode())
-        }
+    }
 
-        // +: :: ::: :+
-        println(squares, "\n", mul, "\n ", empty, mul.reverse, "\n", listCon, listCon.hashCode())
-
-        // TODO  new 的使用场景 ？ 有时候可省略，有时候必须使用，有时候不能使用
-
+    @Test
+    def queueTest(): Unit ={
+        val q: mutable.Queue[Int] = mutable.Queue(1, 2, 3, 4)
+        q.enqueue(5)
+        print(q.dequeue())
     }
 
     @Test
@@ -174,23 +199,33 @@ class Collection{
         /**
          * 虽然可变Set和不可变Set都有添加或删除元素的操作，但是有一个非常大的差别。对不可变Set进行操作，会产生一个新的set，
          * 原来的set并没有改变，这与List一样。 而对可变Set进行操作，改变的是该Set本身，与ListBuffer类似
+         *
+         *  无序不可重复，重复元素不会替换原来的元素而是不做操作
+         * 引申：数据库的存储也是无序的
+         * JAVA: HashSet TreeSet
          */
+        // 无序不可重复, 不可变集合
+        val s = Set(0, 1, 2, 3, 6, 1)
+        println(s + 4, s - 3, s - 5)
+
+        // 可变集合
+        val ms: mutable.Set[Int] = mutable.Set(0, 1, 2, 3, 4, 5, 6, 1)
+        println(ms.getClass)
+
         // 并集：++
         // 交集：&    intersect
-        // 差集：&~
+        // 差集：&~              // 还有一个对称差集 ？？？
         // + -
         // 子集： subSetOf
-        println("setTest")
     }
 
     @Test
-    def mapTest(): Unit ={  // 静态的 不能使用 Junit 测试
-        /**
-         * Map 也叫哈希表（Hash tables）。
-         * Map 有两种类型，可变与不可变（import scala.collection.mutable.Map），
-         * 区别在于可变对象可以修改它，而不可变对象不可以。默认情况下 Scala 使用不可变 Map。
-         * 在 Scala 中 你可以同时使用可变与不可变 Map，不可变的直接使用 Map，可变的使用 mutable.Map。
-         */
+    def mapTest(): Unit ={
+        // Map：也叫哈希表（Hash tables）,键不可重复，重复键映射的值会替换原来的值。
+        //      并在存在重复键的时候返回旧值，否则返回 null
+        // JAVA: HashMap TreeMap HashTable
+
+        // 不可变 Map
         var A:Map[Char,Int] = Map()
         println(A.hashCode())
         A += ('A'-> 1)
@@ -201,23 +236,61 @@ class Collection{
         A ++= Map('c'->3)
         A = A.++(Map('d'->4))
         println(A.hashCode(), A, A.contains('e'))
-
         // A = A.-('c')
         A -= 'c'
         println(A.hashCode(), A, A.contains('e'))
+
+        val m: Map[String, Int] = Map("a" -> 1, "b" -> 2)
+        println((m + ("c" -> 3)).mkString(","), m.mapValues(_ + 2), m.values, m.keys)
+
+        // 可变map
+        val mm: mutable.Map[String, Int] = mutable.Map("a" -> 1, "b" -> 2)
+        mm.remove("a")
+        mm - "b"  // 返回一个新的map
+        println(mm.mkString(","))
+        mm -= "b"
+        mm + ("a" -> 5)     // 返回一个新map
+        println(mm.mkString(","))
+        mm("a") = 6
+        println(mm.mkString(","))
+        mm.update("a", 7)
+        mm.updated("a", 8)  // 返回一个新map
+        println(mm.mkString(","))
+
+        // map 为了防止空指针异常 提供了特殊的类型 Option，存在两个子类 Some 和 None
+        val option: Option[Int] = mm.get("a")
+        println(option, option.get, option.getOrElse(8))
+        // mm.get("f").get java.util.NoSuchElementException: None.get
     }
 
     @Test
     def tupleTest(): Unit ={
-        // 与列表一样，元组也是不可变的，但与列表不同的是元组可以包含不同类型的元素。
-        val t1 = (1, 3.14, "Fred")
-        val t2 = Tuple3(1, 3.14, "Fred") // case class 省略 new
-        // 元组的实际类型取决于它的元素的类型，比如 (99, "runoob") 是 Tuple2[Int, String]。
-        // ('u', 'r', "the", 1, 4, "me") 为 Tuple6[Char, Char, String, Int, Int, String]。
-        // 目前 Scala 支持的元组最大长度为 22。对于更大长度可以使用集合，或者扩展元组。
-        val doubleTuple = ("front", "back")  // 对于二元组 则会提供 swap 函数
-        println(t1, t1._1, t1._2, t1._3, t1.toString(), doubleTuple.swap)
-        t2.productIterator.foreach(i=>{println("str:" + i)})
+        // 与不可变列表一样，元组也是不可变的，但与列表不同的是元组可以包含不同类型的元素。
+        // 将无关的数据当成一组数据
+        var t: (Int, String, Char) = Tuple3(1, "a", 'f')
+        t = (1, "a", 'f')
+        println(t._1, t._2, t._3)
+
+        // 两个元组称为 对偶 （与键值对映射） 对于二元组 则会提供 swap 函数
+        val tm = Map(("a", 1), ("b", 2), ("c", 3))
+        tm.foreach(t2=>{println(t2)})
+        tm.foreach((t2:(String, Int))=>{println(t2._1 + "=" + t2._2)})
+        // tm.foreach((t2:Tuple2[String, Int])=>{println(t2)})
+
+        // -----------------------------------------------------------------------
+
+        // val f = new Function3[Int, String, Char, Boolean]() {
+        //    override def apply(v1: Int, v2: String, v3: Char): Boolean = {true}
+        // }
+
+        val f2 = new ((Int, String, Char) => Boolean)() {
+            override def apply(v1: Int, v2: String, v3: Char): Boolean = {true}
+        }
+        println(f2(1, "a", 'c'), (1, 2).swap)
+
+        // NOTE scala 中元祖的最大长度是22 也就是 Tuple22,
+        //      一样的函数的最大参数个数也是22，即 Function22类型，他们是不同长度参数函数的实际类型
+        //      还有一些类型 Product,
     }
 
     @Test
@@ -233,7 +306,68 @@ class Collection{
     }
 
     @Test
-    def seqTest(): Unit ={
-        println("seq Test")
+    def collectionFunction(): Unit ={
+        // 集合的函数式编程
+        val c = ListBuffer[Int](3, 1, 2, 6, 7, 2, 6)
+        // val r = new Random()
+        c.append(5)
+
+        println("max = " + c.max)
+        println("min = " +  c.min)
+        println("sum = " + c.sum)
+        println("product = " + c.product)
+        println("reverse :" + c.reverse)
+        println("sorted :" + c.sorted)
+        println("sortedWithOrdering :" + c.sorted(Ordering.Int))  // NOTE 没什么用 ？？
+
+        // 迭代
+        for(e <- c) {e / 2}
+        for(e <- c.iterator){e % 2}
+
+        // Top N
+        println(c.take(2).mkString(","))
+
+        // 升序排序
+        println(c.sortBy(_ % 2).mkString(","))
+        val s: List[String] = List("11", "a1", "01", "b2")
+        println(s.sortWith((l, r)=>{l < r}))
+        println(s.sortWith((l, r)=>{l.substring(1) > r(0).toString}))
+
+        // 分组聚合 (聚合后是个Map 如果要排序则转为 list排序)
+        c.groupBy(_ % 2).toList.foreach(t=>{println(t._1 + ": " + t._2.mkString("[", ",", "]"))})
+
+        // 映射 wordcount
+        println(c.map((_, 1)).groupBy(_._1).map(t=>{(t._1, t._2.size)}).mkString(","))
+
+        // 扁平化
+        println(s.flatMap(x =>{x.toCharArray}))
+
+        // 过滤
+        println(c.filter(_ % 2 == 1))
+
+        // 拉链 (python 中也有)
+        println(List(1, 2, 3).zip(Array(1, 2, 3)))
+        println(List(1, 2, 3).zip(Array(1, 2, 3)).unzip)
+
+        // 联合
+        println(List(1, 2, 3).union(Array(1, 2, 3)))
+
+        // 相交
+        println(List(1, 2, 3).intersect(Array(1, 2, 4)))
+
+        // 相减  // 对称相减
+        println(List(1, 2, 3).diff(Array(1, 2, 4)))
+
+        // 化解 归约 降维
+
+
+        // 折叠
+    }
+
+    def scalaIO(): Unit ={
+        import scala.io.Source
+        val source = Source.fromFile("")
+        source.getLines().toList
+        source.close()
     }
 }
