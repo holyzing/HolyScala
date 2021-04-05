@@ -20,6 +20,7 @@
 
         <resources>
             <resource>
+                <!-- 只有在使用 maven 打包的时候才有作用，对idea 的编译（工作空间）不起作用 -->
                 <directory>src/resources</directory>
                 <includes>
                     <include>*.xml</include>

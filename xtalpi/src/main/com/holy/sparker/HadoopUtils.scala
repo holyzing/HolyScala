@@ -65,9 +65,9 @@ object HadoopUtils {
         // config.hadoopConfiguration.set("dfs.namenode.kerberos.principal", "nn/_HOST@XTALPI-BJ.COM")
 
         // NOTE Configuration 静态代码块会主动加载 classpath 下的配置文件
-        config.addResource("core-site.xml")
-        config.addResource("hdfs-site.xml")
-        config.addResource("yarn-site.xml")
+        config.addResource("tmp/core-site.xml")
+        config.addResource("tmp/hdfs-site.xml")
+        config.addResource("tmp/yarn-site.xml")
 
         // config.addResource("modules/LogProcess/src/res/core-site.xml")
         // config.addResource("modules/LogProcess/src/res/hdfs-site.xml")
