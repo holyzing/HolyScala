@@ -75,7 +75,7 @@ object FunctionBase{
         // NOTE: scala 中没有 throws 关键字，所以在函数中如果有其它的异常抛出,需要使用 try catch 捕获。
 
         def test1(): Unit = println("声明函数时加 （）")  // 0参函数
-        def test2: Unit = println("声明函数没加 （）")    // 无参函数
+        def test2: Int = {println("声明函数没加 （）"); 1}    // 无参函数
 
         // scala 可以通过类型推断来简化函数的声明，比如返回类型的推断
         // NOTE  但是当函数签名的返回类型显示声明为 Unit 时，return 结束函数执行，但是返回值无效，始终为 Unit
@@ -278,7 +278,4 @@ class FunctionBase {
         println("还未引用 lazy val")
         println("即将引用 lazy val", s)
     }
-
-
-
 }

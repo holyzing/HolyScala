@@ -7,8 +7,8 @@ import org.apache.hadoop.hbase.client.Result
 
 import io.netty.buffer.PooledByteBufAllocator
 
-import org.apache.spark.examples.pythonconverters.HBaseResultToStringConverter
-import org.apache.spark.examples.pythonconverters.ImmutableBytesWritableToStringConverter
+// import org.apache.spark.examples.pythonconverters.HBaseResultToStringConverter
+// import org.apache.spark.examples.pythonconverters.ImmutableBytesWritableToStringConverter
 import org.apache.hbase.thirdparty.com.google.gson.GsonBuilder
 
 import org.apache.hadoop.hbase.protobuf.generated.MasterProtos
