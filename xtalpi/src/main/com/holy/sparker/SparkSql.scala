@@ -1,13 +1,16 @@
 package com.holy.sparker
 
+import java.sql.Timestamp
+
 import org.apache.spark.TaskContext
 import com.holy.extra.caseClass.Record
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
-import org.apache.spark.sql.{Row, SaveMode, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, Row, SaveMode, SparkSession}
 import org.junit.Test
 
 import scala.collection.mutable
+import scala.util.matching.Regex
 
 
 class SparkSql {
@@ -210,18 +213,40 @@ class SparkSql {
         val columns = Array("id", "name", "category", "project", "cluster", "creator", "datasets", "result",
                             "status", "start_time", "end_time", "image", "git_url", "git_branch", "git_commit",
                             "command", "cpu", "gpu", "spot", "memory", "gpu_model", "relation_report")
-        val structFields = columns.map(StructField(_, DataTypes.StringType, nullable = true))
-        val fieldSchema = StructType(structFields)
+        // val structFields = columns.map(StructField(_, DataTypes.StringType, nullable = true))
+        // val fieldSchema = StructType(structFields)
         val infoCsvDF = spark.read.format("csv")
-            .option("sep", ",").option("inferSchema", "false").option("header", "false").schema(fieldSchema)
+            .option("sep", ",").option("inferSchema", "false").option("header", "false")    //.schema(fieldSchema)
             .load("hdfs://hadoop01/home/holyzing/nohead_batchjob_info.csv")
+
+        val intReg: Regex = "\\d+".r()
+        val boolReg: Regex = "true|false".r()
+        import spark.implicits._
+        def extractIntFromStr = (x: Row)=> intReg.findFirstIn(x.get(0).asInstanceOf[String]).getOrElse("0").toInt
+        val startTime = infoCsvDF.select("start_time").map(_.getTimestamp(0))
+        val endTime = infoCsvDF.select("end_time").map(_.getTimestamp(0))
+        val cpu = infoCsvDF.select("cpu").map(extractIntFromStr)
+        val gpu = infoCsvDF.select("gpu").map(extractIntFromStr)
+        val memory = infoCsvDF.select("memory").map(extractIntFromStr)
+        val spot = infoCsvDF.select("spot").map(x=>{
+            boolReg.findFirstIn(x.get(0).asInstanceOf[String]).getOrElse("false").toBoolean})
+        val gpuModel: Dataset[String] = infoCsvDF.select("gpu_model").map(x=>{
+            val str = x.get(0).asInstanceOf[String].split(": ")(1)
+            str.substring(1, str.length-3)}
+        )
+
+
 
         def typeConverter(row: Row): Row ={
             // NOTE： _*将 一个 seq 拆分为 参数
-            val mMap: mutable.Map[String, String] = scala.collection.mutable.Map(
+            val mMap: mutable.Map[String, Any] = scala.collection.mutable.Map(
                 row.getValuesMap[String](columns).toSeq: _*)
             // map values 不一定是业务需要的数据
-            val startTime: String = mMap.getOrElse("start_time", null)
+            val startTime = mMap.getOrElse("start_time", null)
+            if (startTime != null){
+
+            }
+
             row
         }
 
