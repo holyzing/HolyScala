@@ -1,15 +1,18 @@
 package com.holy.sparker
 
-import com.holy.extra.caseClass.Record
 import org.apache.spark.TaskContext
+import com.holy.extra.caseClass.Record
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.types.{DataTypes, StructField, StructType}
 import org.apache.spark.sql.{Row, SaveMode, SparkSession}
 import org.junit.Test
+
+import scala.collection.mutable
 
 
 class SparkSql {
     // HadoopUtils.setProperties()
     val tempPath: String = HadoopUtils.workHome + "/tmp"
-    val peopleCsvPath: String = HadoopUtils.sparkHome + "/examples/src/main/resources/people.csv"
     val peopleJsonPath: String = HadoopUtils.sparkHome +  "/examples/src/main/resources/people.json"
     val usersParquetPath: String = HadoopUtils.sparkHome + "/examples/src/main/resources/users.parquet"
     val spark: SparkSession = SparkSession.builder().appName("SparkDataSource")
@@ -201,17 +204,36 @@ class SparkSql {
     }
 
     @Test
-    def csvTest(): Unit ={
-        // NOTE CSV
-        // val df = spark.read.option("header","true").option("inferSchema","true").csv(hdfsPath)
-        // df.show()
-        // df.write.option("header","true").mode("overwrite").csv("hdfs://10.111.32.184:8020/user/dp/demo")
-        val peopleDFCsv = spark.read.format("csv")
-            .option("sep", ";")
-            .option("inferSchema", "true")
-            .option("header", "true")
-            .load("file:///" + peopleCsvPath )  // 配置了 hadoop 默认的schema 是 hdfs://
-        peopleDFCsv.show()
+    def csvTest(): Unit = {
+        // val peopleCsvPath: String = HadoopUtils.sparkHome + "/examples/src/main/resources/people.csv"
+        // 配置了 hadoop 默认的schema 是 hdfs:// 读取本地文件添加 schema file:///
+        val columns = Array("id", "name", "category", "project", "cluster", "creator", "datasets", "result",
+                            "status", "start_time", "end_time", "image", "git_url", "git_branch", "git_commit",
+                            "command", "cpu", "gpu", "spot", "memory", "gpu_model", "relation_report")
+        val structFields = columns.map(StructField(_, DataTypes.StringType, nullable = true))
+        val fieldSchema = StructType(structFields)
+        val infoCsvDF = spark.read.format("csv")
+            .option("sep", ",").option("inferSchema", "false").option("header", "false").schema(fieldSchema)
+            .load("hdfs://hadoop01/home/holyzing/nohead_batchjob_info.csv")
+
+        def typeConverter(row: Row): Row ={
+            // NOTE： _*将 一个 seq 拆分为 参数
+            val mMap: mutable.Map[String, String] = scala.collection.mutable.Map(
+                row.getValuesMap[String](columns).toSeq: _*)
+            // map values 不一定是业务需要的数据
+            val startTime: String = mMap.getOrElse("start_time", null)
+            row
+        }
+
+        val value: RDD[Row] = infoCsvDF.rdd.map(typeConverter)
+
+        // infoCsvDF.printSchema()
+        // println(infoCsvDF.columns.mkString(","))
+        //
+
+        val row = infoCsvDF.tail(1)
+        println(row.mkString("   "))
+        infoCsvDF.show()
     }
 
     def hiveTest(): Unit ={
