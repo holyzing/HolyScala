@@ -14,7 +14,7 @@ import scala.util.matching.Regex
 
 
 class SparkSql {
-    // HadoopUtils.setProperties()
+    HadoopUtils.setProperties()
     val tempPath: String = HadoopUtils.workHome + "/tmp"
     val peopleJsonPath: String = HadoopUtils.sparkHome +  "/examples/src/main/resources/people.json"
     val usersParquetPath: String = HadoopUtils.sparkHome + "/examples/src/main/resources/users.parquet"
@@ -24,7 +24,7 @@ class SparkSql {
         .config("spark.sql.warehouse.dir", tempPath + "/warehouse")
         .enableHiveSupport().master("local[*]").getOrCreate()
 
-    // HadoopUtils.hadoopConfig(spark.sparkContext.hadoopConfiguration)
+    HadoopUtils.hadoopConfig(spark.sparkContext.hadoopConfiguration)
     // NOTE Setting hive.metastore.warehouse.dir ('null') to the value of spark.sql.warehouse.dir
     spark.sparkContext.hadoopConfiguration.addResource("hive-site.xml")
 
@@ -208,57 +208,70 @@ class SparkSql {
 
     @Test
     def csvTest(): Unit = {
+        // NOTE scala 在数据清洗，字符串处理层面远没有 python 方便
         // val peopleCsvPath: String = HadoopUtils.sparkHome + "/examples/src/main/resources/people.csv"
         // 配置了 hadoop 默认的schema 是 hdfs:// 读取本地文件添加 schema file:///
         val columns = Array("id", "name", "category", "project", "cluster", "creator", "datasets", "result",
                             "status", "start_time", "end_time", "image", "git_url", "git_branch", "git_commit",
                             "command", "cpu", "gpu", "spot", "memory", "gpu_model", "relation_report")
-        // val structFields = columns.map(StructField(_, DataTypes.StringType, nullable = true))
-        // val fieldSchema = StructType(structFields)
+        val structFields = columns.map(StructField(_, DataTypes.StringType, nullable = true))
+        val fieldSchema = StructType(structFields)
         val infoCsvDF = spark.read.format("csv")
-            .option("sep", ",").option("inferSchema", "false").option("header", "false")    //.schema(fieldSchema)
+            .option("sep", ",").option("inferSchema", "false").option("header", "false").schema(fieldSchema)
             .load("hdfs://hadoop01/home/holyzing/nohead_batchjob_info.csv")
 
-        val intReg: Regex = "\\d+".r()
         val boolReg: Regex = "true|false".r()
-        import spark.implicits._
+
+        // import spark.implicits._
+        // NOTE 由于类型不一致，RDD 类型只能存储为 Any ？？？ DataSet[Row] 不存在隐式转换，只能转换为 RDD
+        //      这额外增加了类型转换步骤，如何避免
+
+        def parseIntFromStr = (x: Row) => {
+            val tm = x.get(0).asInstanceOf[String]
+            if (tm.matches("\\d+")) {
+                tm.toInt
+            } else {
+                null
+            }
+        }
+
+        val startTime: RDD[Any] = infoCsvDF.select("start_time").rdd.map(parseIntFromStr)
+        val endTime: RDD[Any] = infoCsvDF.select("end_time").rdd.map(parseIntFromStr)
+
+        val intReg: Regex = "\\d+".r()
         def extractIntFromStr = (x: Row)=> intReg.findFirstIn(x.get(0).asInstanceOf[String]).getOrElse("0").toInt
-        val startTime = infoCsvDF.select("start_time").map(_.getTimestamp(0))
-        val endTime = infoCsvDF.select("end_time").map(_.getTimestamp(0))
-        val cpu = infoCsvDF.select("cpu").map(extractIntFromStr)
-        val gpu = infoCsvDF.select("gpu").map(extractIntFromStr)
-        val memory = infoCsvDF.select("memory").map(extractIntFromStr)
-        val spot = infoCsvDF.select("spot").map(x=>{
+
+        val cpu: Dataset[Int] = infoCsvDF.select("cpu").map(extractIntFromStr)
+        val gpu: Dataset[Int] = infoCsvDF.select("gpu").map(extractIntFromStr)
+        val memory: Dataset[Int] = infoCsvDF.select("memory").map(extractIntFromStr)
+        val spot: Dataset[Boolean] = infoCsvDF.select("spot").map(x=>{
             boolReg.findFirstIn(x.get(0).asInstanceOf[String]).getOrElse("false").toBoolean})
         val gpuModel: Dataset[String] = infoCsvDF.select("gpu_model").map(x=>{
             val str = x.get(0).asInstanceOf[String].split(": ")(1)
             str.substring(1, str.length-3)}
         )
+        println(startTime.first(), endTime.first(), cpu.first(), gpu.first(),
+                memory.first(), spot.first(), gpuModel.first()) // collect 触发action
 
+        // TODO 如何以每一列的形式直接存入 HBase 而不是组成行，存入 Hbase ??? 分布式的显然不适合以但内存的思维方式操作
 
-
-        def typeConverter(row: Row): Row ={
-            // NOTE： _*将 一个 seq 拆分为 参数
-            val mMap: mutable.Map[String, Any] = scala.collection.mutable.Map(
-                row.getValuesMap[String](columns).toSeq: _*)
-            // map values 不一定是业务需要的数据
-            val startTime = mMap.getOrElse("start_time", null)
-            if (startTime != null){
-
-            }
-
-            row
-        }
-
-        val value: RDD[Row] = infoCsvDF.rdd.map(typeConverter)
+        // def typeConverter(row: Row): Row ={
+        //     // NOTE： _*将 一个 seq 拆分为 参数
+        //     val mMap: mutable.Map[String, Any] = scala.collection.mutable.Map(
+        //         row.getValuesMap[String](columns).toSeq: _*)
+        //     // map values 不一定是业务需要的数据
+        //     val startTime = mMap.getOrElse("start_time", null)
+        //     if (startTime != null){
+        //     }
+        //     row
+        // }
 
         // infoCsvDF.printSchema()
         // println(infoCsvDF.columns.mkString(","))
-        //
 
-        val row = infoCsvDF.tail(1)
-        println(row.mkString("   "))
-        infoCsvDF.show()
+        // val row = infoCsvDF.tail(1)
+        // println(row.mkString("   "))
+        // infoCsvDF.show()
     }
 
     def hiveTest(): Unit ={
