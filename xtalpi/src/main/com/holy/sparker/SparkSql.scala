@@ -14,7 +14,6 @@ import scala.util.matching.Regex
 
 
 class SparkSql {
-    HadoopUtils.setProperties()
     val tempPath: String = HadoopUtils.workHome + "/tmp"
     val peopleJsonPath: String = HadoopUtils.sparkHome +  "/examples/src/main/resources/people.json"
     val usersParquetPath: String = HadoopUtils.sparkHome + "/examples/src/main/resources/users.parquet"
@@ -27,6 +26,7 @@ class SparkSql {
     HadoopUtils.hadoopConfig(spark.sparkContext.hadoopConfiguration)
     // NOTE Setting hive.metastore.warehouse.dir ('null') to the value of spark.sql.warehouse.dir
     spark.sparkContext.hadoopConfiguration.addResource("hive-site.xml")
+    spark.sparkContext.setLogLevel("WARN")
 
     // Encoders for most common types are automatically provided by importing spark.implicits._
     import spark.implicits._
