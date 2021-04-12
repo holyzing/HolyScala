@@ -5,7 +5,62 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.HBaseAdmin
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
-import org.apache.hadoop.yarn.webapp.hamlet.HamletSpec.InputType
+// 扩展：上层处理请求服务的扩展（RegionServer），下层存储数据的扩展（DataNode）
+
+// 存储逻辑 (物理存储 和 逻辑存储)
+// 访问逻辑（如何定位查询）是如何执行查询，过滤的
+// HReginServer 的个数是根据存储数据的大小来扩展的 ？？？
+// Hmaster 启动的节点就在 Zookeeper所在的集群中 ？？？
+// 一个列族中是如何按行组织数据的，不同列族之间呢 ？？？
+
+// Zookeeper：
+//   保证集群中只有 1 个 master 在运行，如果 master 异常，会通过竞争机制产生新的 master 提供服务
+//   监控 RegionServer 的状态，当 RegionSevrer 有异常的时候，通过回调的形式通知 Master RegionServer 上下线的信息
+//   通过 Zoopkeeper 存储元数据的统一入口地址以及集群配置的维护等工作
+
+// HMaster：
+//   通过 Zookeeper 发布自己的位置给客户端
+//   为 RegionServer 分配 Region，监控 RegionServer 处理 RegionServer 故障转移
+//   维护整个集群的负载均衡，在空闲时间进行数据的负载均衡
+//   维护集群的元数据信息，处理元数据的变更
+//   处理 region 的分配或转移，发现失效的 Region，并将失效的 Region 分配到正常的 RegionServer 上
+//   当 RegionSever 失效的时候，协调对应 Hlog 的拆分
+
+// HReginServer：
+//   负责存储 HBase 的实际数据，直接对接用户的读写请求，是真正的“干活”的节点。它的功能概括如下：
+//   管理 master 为其分配的 Region
+//   处理来自客户端的读写请求
+//   负责和底层 HDFS 的交互，存储数据到 HDFS，刷新缓存到 HDFS
+//   负责 Region 变大以后的拆分，负责处理 Region 分片
+//   负责 Storefile 的合并工作
+//   维护 Hlog，执行压缩
+
+// Hdfs：
+//   HDFS 为 Hbase 提供最终的底层数据存储服务，同时为 HBase 提供高可用（Hlog 存储在HDFS）的支持
+//   提供元数据和表数据的底层分布式存储服务
+
+// Write-Ahead logs：
+//   HBase 的修改记录，当对 HBase 读写数据的时候，数据不是直接写进磁盘，
+//   它会在内存中保留一段时间（时间以及数据量阈值可以设定）。但把数据保存
+//   在内存中可能有更高的概率引起数据丢失，为了解决这个问题，数据会先写在
+//   一个叫做 Write-Ahead logfile 的文件中，然后再写入内存中。所以在系
+//   统出现故障的时候，数据可以通过这个日志文件重建。
+
+// Region：
+//   Hbase 表的分片，HBase 表会根据 RowKey值被切分成不同的 region 存储在 RegionServer中，
+//   在一个 RegionServer 中可以有多个不同的 region。
+
+// Store：
+//    HFile 存储在 Store 中，一个 Store 对应 HBase 表中的一个列族。
+
+// MemStore：
+//    顾名思义，就是内存存储，位于内存中，用来保存当前的数据操作，所以当数据保存在
+//    WAL 中之后，RegsionServer 会在内存中存储键值对。 尚硅谷大数据技术之 HBase
+
+// HFile：
+// 这是在磁盘上保存原始数据的实际的物理文件，是实际的存储文件。StoreFile 是以 Hfile的形式存储在 HDFS 的。
+
+
 
 object HadoopUtils {
     val os: String = System.getProperty("os.name")

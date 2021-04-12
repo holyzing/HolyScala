@@ -3,7 +3,7 @@ package com.holy.sparker
 import org.apache.hadoop.fs.Path
 import org.apache.hadoop.hbase.client.{ConnectionFactory, Table}
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable
-import org.apache.hadoop.hbase.{HBaseConfiguration, KeyValue, TableName}
+import org.apache.hadoop.hbase.{KeyValue, TableName}
 import org.apache.hadoop.hbase.mapreduce.{HFileOutputFormat2, LoadIncrementalHFiles}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.hadoop.mapreduce.Job
