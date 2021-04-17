@@ -5,10 +5,29 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase.HBaseConfiguration
 import org.apache.hadoop.hbase.client.HBaseAdmin
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
+
+
+// NOTE Spark 的经典应用：离线数仓, 实时数仓
+// TODO Spark 读取 Aws S3
+// TODO 和 裴磊要 BigExcavator 的源码
+
 // 扩展：上层处理请求服务的扩展（RegionServer），下层存储数据的扩展（DataNode）
 
 // 存储逻辑 (物理存储 和 逻辑存储)
+//         Rowkey ColumnFamily ColumnQualifier TimeStamp Type Value
+
+// 逻辑存储：按照行键组织形成一行，但是数据是以一个字典形式存储的，每行每个字典的键可以不一致
+//         数据库操作的原子性在行，所有键值写完方为 写入完成。该种存储方式带来了 宽表和高表的概念
+//         且 region的划分是根据 行健 进行划分的。
+//         所以说行健的设计遵循的原则是 尽可能要散列在不同的 region Server 上，而且要包含一定的
+//         业务信息。
+
+//         HBase定义表时只需要声明列族即可，数据属性，比如超时时间（TTL），压缩算法（COMPRESSION）等，
+//         都在列族的定义中定义，不需要声明具体的列。这意味着，往HBase写入数据时，字段可以动态、按需指定。
+//         因此，和关系型数据库相比，HBase能够轻松应对字段变更的场景。
+
 // 访问逻辑（如何定位查询）是如何执行查询，过滤的
+
 // HReginServer 的个数是根据存储数据的大小来扩展的 ？？？
 // Hmaster 启动的节点就在 Zookeeper所在的集群中 ？？？
 // 一个列族中是如何按行组织数据的，不同列族之间呢 ？？？
@@ -26,7 +45,7 @@ import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 //   处理 region 的分配或转移，发现失效的 Region，并将失效的 Region 分配到正常的 RegionServer 上
 //   当 RegionSever 失效的时候，协调对应 Hlog 的拆分
 
-// HReginServer：
+// HRegionServer：
 //   负责存储 HBase 的实际数据，直接对接用户的读写请求，是真正的“干活”的节点。它的功能概括如下：
 //   管理 master 为其分配的 Region
 //   处理来自客户端的读写请求
