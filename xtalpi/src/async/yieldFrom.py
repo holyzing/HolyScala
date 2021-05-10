@@ -16,7 +16,8 @@
 
     # 多路复用，密集型 IO，执行IO 不占用 CPU逻辑吗 ？？？占用的少 ？？？
 """
-from typing import Any, Generator
+import sys
+from typing import Any, Generator  # , Iterator
 
 
 def yield0(threshold):
@@ -144,6 +145,57 @@ if __name__ == '__main__':
     yield from帮我们做了很多的异常处理，而且全面，而这些如果我们要自己去实现的话，一个是编写代码难度增加，写出来的代码可读性极差，
     这些我们就不说了，最主要的是很可能有遗漏，只要哪个异常没考虑到，都有可能导致程序崩溃什么的
     """
+
+
+def yieldFromHelp(EXPR):
+    """
+    一些说明
+    _i：子生成器，同时也是一个迭代器
+    _y：子生成器生产的值
+    _r：yield from 表达式最终的值
+    _s：调用方通过send()发送的值
+    _e：异常对象
+    """
+    _i: Generator = iter(EXPR)
+    try:
+        _y = next(_i)
+    except StopIteration as _e:
+        _r = _e.value
+
+    else:
+        while 1:
+            try:
+                _s = yield _y
+            except GeneratorExit as _e:
+                try:
+                    _m = _i.close
+                except AttributeError:
+                    pass
+                else:
+                    _m()
+                raise _e
+            except BaseException as _e:
+                _x = sys.exc_info()
+                try:
+                    _m = _i.throw
+                except AttributeError:
+                    raise _e
+                else:
+                    try:
+                        _y = _m(*_x)
+                    except StopIteration as _e:
+                        _r = _e.value
+                        break
+            else:
+                try:
+                    if _s is None:
+                        _y = next(_i)
+                    else:
+                        _y = _i.send(_s)
+                except StopIteration as _e:
+                    _r = _e.value
+                    break
+    # RESULT = _r
 
     """
     1- 迭代器（即可指子生成器）产生的值直接返还给调用者

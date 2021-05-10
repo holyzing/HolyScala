@@ -1,8 +1,11 @@
 # -*- encoding: utf-8 -*-
 import time
+import random
 import asyncio
+import threading
 from asyncio.futures import Future
 from collections.abc import Coroutine  # Generator
+
 """
     将协程对象转为task任务对象
     定义一个事件循环对象容器用来存放task
@@ -78,36 +81,30 @@ class SingleTaskTest(object):
         loop.run_until_complete(task)
 
 
+# 协程中的多任务
 class MultiTaskTest(object):
+    """
+    asyncio实现并发，就需要多个协程来完成任务，每当有任务 "阻塞" 的时候就await，然后其他协程继续工作。
+    """
     @staticmethod
-    async def do_some_work(x):
+    async def do_some_work(x: int):
         print('Waiting: ', x)
         await asyncio.sleep(x)
+        print(f"IO 阻塞结束 {x} 继续执行")
         return 'Done after {}s'.format(x)
 
     @staticmethod
     def create_tasks():
         coroutine1 = MultiTaskTest.do_some_work(1)
-        coroutine2 = MultiTaskTest.do_some_work(2)
         coroutine3 = MultiTaskTest.do_some_work(4)
-
+        coroutine2 = MultiTaskTest.do_some_work(2)
         # 将协程转成task，并组成list
-        tasks = [
-            asyncio.ensure_future(coroutine1),
-            asyncio.ensure_future(coroutine2),
-            asyncio.ensure_future(coroutine3)
-        ]
+        task1 = asyncio.ensure_future(coroutine1)
+        task3 = asyncio.ensure_future(coroutine3)
+        task2 = asyncio.ensure_future(coroutine2)
+        task3.add_done_callback(lambda x: print(f"回调函数3 处理 result:", x))
+        tasks = [task1, task2, task3]
         return tasks
-
-    @staticmethod
-    def run_tasks(tasks):
-        loop = asyncio.get_event_loop()
-        if isinstance(tasks, list):
-            loop.run_until_complete(asyncio.wait(tasks))
-            for task in tasks:
-                print('Task ret: ', task.result())
-        elif callable(tasks):
-            loop.run_until_complete(tasks())
 
     @staticmethod
     async def nestedCoroutines(method="wait"):
@@ -116,16 +113,132 @@ class MultiTaskTest(object):
         # 【重点】：await 一个task列表（协程）
         # dones：表示已经完成的任务
         # pendings：表示悬而未决的任务
+
+        # THINK 嵌套本身在业务逻辑上是没有什么实际意义的， 和 yield from 一样主要是为了作为一个桥梁，传递参数，处理其它异常而用 ？？？
+        #       只是把创建协程对象，转换task任务，封装成在一个协程函数里而已。外部的协程，嵌套了一个内部的协程。
+        #       而 “非嵌套”的单层线程运行，在 asyncio.wait() 源码中也是套了一层协程 _wait
+
         if method == "wait":
             dones, pendings = await asyncio.wait(MultiTaskTest.create_tasks())
+            print("主协程 wait 中 所有子协程结束 ！")
+            print(len(pendings))
             for task in dones:
                 print('Task ret: ', task.result())
         elif method == "gather":
             results = await asyncio.gather(*MultiTaskTest.create_tasks())
+            print("主协程 gather 中 所有子协程结束 ！")
             for result in results:
                 print('Task ret: ', result)
 
+    @staticmethod
+    def run_tasks(tasks, method="wait"):
+        loop = asyncio.get_event_loop()
+        if isinstance(tasks, list):
+            if method == "wait":
+                loop.run_until_complete(asyncio.wait(tasks))
+                print("主线程 wait 中所有协程结束 ！")
+            elif method == "gather":
+                loop.run_until_complete(asyncio.gather(*tasks))
+                print("主线程 gather 中所有协程结束 ！")
+            for task in tasks:
+                print('Task ret: ', task.result())
+        # NOTE 协程中嵌套一个多任务
+        # elif callable(tasks):
+        elif isinstance(tasks, Coroutine):
+            loop.run_until_complete(tasks)
+            print("主线程中所有协程结束 ！")
+
+    @staticmethod
+    def waitAndGatherDiff():
+        loop = asyncio.get_event_loop()
+        group1 = asyncio.gather(*MultiTaskTest.create_tasks())
+        group2 = asyncio.gather(*MultiTaskTest.create_tasks())
+        group3 = asyncio.gather(*MultiTaskTest.create_tasks())
+        loop.run_until_complete(asyncio.gather(group1, group2, group3))
+
+        # Wait 有控制功能
+        async def coro(tag):
+            print(tag)
+            await asyncio.sleep(random.uniform(0.5, 5))
+
+        loop = asyncio.get_event_loop()
+
+        tasks = [coro(i) for i in range(1, 11)]
+
+        # 【控制运行任务数】：运行第一个任务就返回
+        # FIRST_COMPLETED ：第一个任务完全返回
+        # FIRST_EXCEPTION：产生第一个异常返回
+        # ALL_COMPLETED：所有任务完成返回 （默认选项）
+        dones, pendings = loop.run_until_complete(
+            asyncio.wait(tasks, return_when=asyncio.FIRST_COMPLETED))
+        print("第一次完成的任务数:", len(dones))
+
+        # 【控制时间】：运行一秒后，就返回
+        dones2, pendings2 = loop.run_until_complete(
+            asyncio.wait(pendings, timeout=1))
+        print("第二次完成的任务数:", len(dones2))
+
+        # 【默认】：所有任务完成后返回
+        dones3, pendings3 = loop.run_until_complete(asyncio.wait(pendings2))
+
+        print("第三次完成的任务数:", len(dones3))
+
+        loop.close()
+
+
+def coroutineStateTest():
+    """
+    Future对象，或者Task任务 的状态
+    Pending：创建future，还未执行
+    Running：事件循环正在调用执行任务
+    Done：任务执行完毕
+    Cancelled：Task被取消后的状态
+    """
+    async def hello():
+        print("Running in the loop...")
+        flag = 0
+        while flag < 1000000:
+            with open("/home/holyzing/xtalpi/My/_03_Scala/Scala/xtalpi/tmp/test.txt", "a") as f:
+                f.write("\n------")
+            flag += 1
+        print("Stop the loop")
+
+    coroutine = hello()
+    loop = asyncio.get_event_loop()
+    # task = asyncio.ensure_future(coroutine)
+    task = loop.create_task(coroutine)
+
+    print(task)         # Pending：未执行状态
+    try:
+        t1 = threading.Thread(target=loop.run_until_complete, args=(task,))
+        # t1.daemon = True      # TODO 多线程需要好好理解一下
+        t1.start()
+        time.sleep(4)
+        print("----------------------------------------------》")
+        print(task)     # Running：运行中状态
+        print("加入到当前主线程 ...")
+        t1.join()
+        print("等待 t1 执行完成之后，才会notify 当前线程 ！")
+    except KeyboardInterrupt as e:
+        print(e)
+        task.cancel()   # Cacelled：取消任务
+        print(task)
+    finally:
+        print(task)
+
+    """
+    顺利执行                            : Pending -> Pending：Runing -> Finished 的状态变化
+    执行后立马按下 Ctrl+C，则会触发task取消 : Pending -> Cancelling -> Cancelling 的状态变化。
+    """
+
 
 if __name__ == '__main__':
+    """
+     NOTE asyncio 是如何 捕获到 IO 阻塞开始，以及阻塞结束的 ？
+    """
     # SingleTaskTest.test()
-    MultiTaskTest.run_tasks(MultiTaskTest.create_tasks())
+    # MultiTaskTest.run_tasks(MultiTaskTest.create_tasks(), "wait")
+    # MultiTaskTest.run_tasks(MultiTaskTest.create_tasks(), "gather")
+    # MultiTaskTest.run_tasks(MultiTaskTest.nestedCoroutines("wait"))
+    # MultiTaskTest.run_tasks(MultiTaskTest.nestedCoroutines("gather"))
+    coroutineStateTest()
