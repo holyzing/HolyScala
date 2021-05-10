@@ -102,7 +102,7 @@ class MultiTaskTest(object):
         task1 = asyncio.ensure_future(coroutine1)
         task3 = asyncio.ensure_future(coroutine3)
         task2 = asyncio.ensure_future(coroutine2)
-        task3.add_done_callback(lambda x: print(f"回调函数3 处理 result:", x))
+        task3.add_done_callback(lambda x: print(f"回调函数3 处理 result:", x.result()))
         tasks = [task1, task2, task3]
         return tasks
 
@@ -151,19 +151,21 @@ class MultiTaskTest(object):
     @staticmethod
     def waitAndGatherDiff():
         loop = asyncio.get_event_loop()
-        group1 = asyncio.gather(*MultiTaskTest.create_tasks())
-        group2 = asyncio.gather(*MultiTaskTest.create_tasks())
-        group3 = asyncio.gather(*MultiTaskTest.create_tasks())
-        loop.run_until_complete(asyncio.gather(group1, group2, group3))
+        # group1 = asyncio.gather(*MultiTaskTest.create_tasks())
+        # group2 = asyncio.gather(*MultiTaskTest.create_tasks())
+        # group3 = asyncio.gather(*MultiTaskTest.create_tasks())
+        # loop.run_until_complete(asyncio.gather(group1, group2, group3))
+
+        print("主线程必须等待所有协程结束")
 
         # Wait 有控制功能
         async def coro(tag):
-            print(tag)
-            await asyncio.sleep(random.uniform(0.5, 5))
-
-        loop = asyncio.get_event_loop()
+            t = random.uniform(0.5, 5)
+            await asyncio.sleep(t)
+            print(tag, "睡了", t)
 
         tasks = [coro(i) for i in range(1, 11)]
+        # 最开始的肯定是第一个先执行，直到遇到 IO 则挂起执行第二个
 
         # 【控制运行任务数】：运行第一个任务就返回
         # FIRST_COMPLETED ：第一个任务完全返回
@@ -175,7 +177,7 @@ class MultiTaskTest(object):
 
         # 【控制时间】：运行一秒后，就返回
         dones2, pendings2 = loop.run_until_complete(
-            asyncio.wait(pendings, timeout=1))
+            asyncio.wait(pendings, timeout=3))
         print("第二次完成的任务数:", len(dones2))
 
         # 【默认】：所有任务完成后返回
@@ -215,7 +217,7 @@ def coroutineStateTest():
         t1.start()
         time.sleep(4)
         print("----------------------------------------------》")
-        print(task)     # Running：运行中状态
+        print(task)     # Pending：运行中状态
         print("加入到当前主线程 ...")
         t1.join()
         print("等待 t1 执行完成之后，才会notify 当前线程 ！")
@@ -227,8 +229,12 @@ def coroutineStateTest():
         print(task)
 
     """
-    顺利执行                            : Pending -> Pending：Runing -> Finished 的状态变化
-    执行后立马按下 Ctrl+C，则会触发task取消 : Pending -> Cancelling -> Cancelling 的状态变化。
+    你对Pending这个词的意思有误解，pending在这里的意思是悬而未决的意思。
+    所以不存在你说的有pending和pending running这两个状态之分，在task没结束之前，
+    他的状态都是pending，我发现中国人学编程最大的困难是英语差
+    
+    关于asyncio.wait接收参数的方式一节中，对coro不转为task对象传入的方式其实在文档中已经有说明“直接向 wait() 传入协程对象的方式已弃用”
+    https://docs.python.org/zh-cn/3.7/library/asyncio-task.html?highlight=wait#asyncio.wait
     """
 
 
@@ -241,4 +247,5 @@ if __name__ == '__main__':
     # MultiTaskTest.run_tasks(MultiTaskTest.create_tasks(), "gather")
     # MultiTaskTest.run_tasks(MultiTaskTest.nestedCoroutines("wait"))
     # MultiTaskTest.run_tasks(MultiTaskTest.nestedCoroutines("gather"))
-    coroutineStateTest()
+    # coroutineStateTest()
+    MultiTaskTest.waitAndGatherDiff()
