@@ -229,6 +229,7 @@ def coroutineStateTest():
         print(task)
 
     """
+    IMPORTANT NOTE :
     你对Pending这个词的意思有误解，pending在这里的意思是悬而未决的意思。
     所以不存在你说的有pending和pending running这两个状态之分，在task没结束之前，
     他的状态都是pending，我发现中国人学编程最大的困难是英语差
