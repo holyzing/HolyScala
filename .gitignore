@@ -14,3 +14,5 @@ spark-warehouse/
 metastore_db/
 xtalpi/src/resources/
 *.jar
+/__pycache__/
+
