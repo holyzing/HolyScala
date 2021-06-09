@@ -32,7 +32,36 @@ import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 // Hmaster 启动的节点就在 Zookeeper所在的集群中 ？？？
 // 一个列族中是如何按行组织数据的，不同列族之间呢 ？？？
 
+
+
+// ---------------------------------------------------------------------------------------------------------------------
+// Rowkey:
+//   Bigtable通过行关键字的字典顺序来组织数据
+
+// ColimnFamily：
+//   “列族“，列族是访问控制的基本单位。存放在同一列族下的所有数据通常都属于同一个类型（我们可以把同一个列族下的数据压缩在一起）
+//   访问控制、磁盘和内存的使用统计都是在列族层面进行的，控制权限能帮助我们管理不同类型的应用：
+//      我们允许一些应用可以添加新的基本数据、
+//      一些应用可以读取基本数据并创建继承的列族、
+//      一些应用则只允许浏览数据（甚至可能因为隐私的原因不能浏览所有数据）
+//      列蔟中的列是可以动态增加的。
+
+// Timestamp：
+//   "数据项" 中，不同版本的数据按照时间戳倒序排序，即最新的数据排在最前面。
+//   为了减轻多个版本数据的管理负担，我们对每一个列族配有两个设置参数，Bigtable通过这两个参数可以对废弃版本的数据自动进行垃圾收集。
+//   用户可以指定只保存最后n个版本的数据，或者只保存“足够新”的版本的数据（比如，只保存最近7天的内容写入的数据）
+
+// Transaction：
+//    Bigtable支持单行上的事务处理，利用这个功能，用户可以对存储在一个行关键字下的数据进行原子性的读-更新-写操作。
+//    虽然Bigtable提供了一个允许用户跨行批量写入数据的接口，但是，Bigtable目前还不支持通用的跨行事务处理。
+//    其次，Bigtable允许把数据项用做整数计数器。
+
+// THINK BigTable依赖集群管理系统来调度任务、管理共享的机器上的资源、处理机器的故障、以及监视机器的状态 ？
+
+
+// ---------------------------------------------------------------------------------------------------------------------
 // Zookeeper：
+//   高可用的、序列化的分布式锁服务组件 (Chubby 使用 Paxos 算法来保证副本的一致性)
 //   保证集群中只有 1 个 master 在运行，如果 master 异常，会通过竞争机制产生新的 master 提供服务
 //   监控 RegionServer 的状态，当 RegionSevrer 有异常的时候，通过回调的形式通知 Master RegionServer 上下线的信息
 //   通过 Zoopkeeper 存储元数据的统一入口地址以及集群配置的维护等工作
@@ -44,6 +73,10 @@ import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 //   维护集群的元数据信息，处理元数据的变更
 //   处理 region 的分配或转移，发现失效的 Region，并将失效的 Region 分配到正常的 RegionServer 上
 //   当 RegionSever 失效的时候，协调对应 Hlog 的拆分
+
+//   和很多Single-Master类型的分布式存储系统类似，客户端读取的数据都不经过Master服务器：
+//   客户程序直接和Tablet服务器通信进行读写操作。由于BigTable的客户程序不必通过Master服务器来获取Tablet的位置信息，
+//   因此，大多数客户程序甚至完全不需要和Master服务器通信。在实际应用中，Master服务器的负载是很轻的
 
 // HRegionServer：
 //   负责存储 HBase 的实际数据，直接对接用户的读写请求，是真正的“干活”的节点。它的功能概括如下：
@@ -69,6 +102,11 @@ import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 //   Hbase 表的分片，HBase 表会根据 RowKey值被切分成不同的 region 存储在 RegionServer中，
 //   在一个 RegionServer 中可以有多个不同的 region。
 
+//   Bigtable 使用一个三层的、类似Ｂ+树[10]的结构存储Tablet的位置信息
+
+
+
+
 // Store：
 //    HFile 存储在 Store 中，一个 Store 对应 HBase 表中的一个列族。
 
@@ -78,6 +116,13 @@ import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 
 // HFile：
 // 这是在磁盘上保存原始数据的实际的物理文件，是实际的存储文件。StoreFile 是以 Hfile的形式存储在 HDFS 的。
+
+// BigTable内部存储数据的文件是Google SSTable格式的。SSTable是一个持久化的、排序的、不可更改的Map结构，
+// 而Map是一个key-value映射的数据结构，key和value的值都是任意的Byte串。可以对SSTable进行如下的操作：
+// 查询与一个key值相关的value，或者遍历某个key值范围内的所有的key-value对。从内部看，SSTable是一系列的数据块
+// （通常每个块的大小是64KB，这个大小是可以配置的）。SSTable使用块索引（通常存储在SSTable的最后）来定位数据块；
+// 在打开SSTable的时候，索引被加载到内存。每次查找都可以通过一次磁盘搜索完成：首先使用二分查找法在内存中的索引里找
+// 到数据块的位置，然后再从硬盘读取相应的数据块。也可以选择把整个SSTable都放在内存中，这样就不必访问硬盘了。
 
 
 
