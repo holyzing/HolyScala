@@ -31,3 +31,6 @@
 22. iptables -t nat -nvL
 23. telnet ip port
 24. cat >> msg.log << EOF
+
+25. cat ip-10-0*|awk -F '>' '{if($1~/^[</) print $1}'|uniq -c|sort|tail -10
+26. ps -ef| grep uwsgi | awk '{print $2}'| xargs kill -9
